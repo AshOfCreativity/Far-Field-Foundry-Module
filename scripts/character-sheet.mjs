@@ -23,7 +23,7 @@ export class CharacterSheet extends ActorSheet {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["lancer", "sheet", "actor", "character-sheet", "far-field-character"],
-      template: "modules/lancer-far-field/templates/character-sheet.hbs",
+      template: "modules/Far-Field-Foundry-Module-main/templates/character-sheet.hbs",
       width: 850,
       height: 750,
       tabs: [
@@ -39,7 +39,7 @@ export class CharacterSheet extends ActorSheet {
 
   /** @override */
   get template() {
-    return "modules/lancer-far-field/templates/character-sheet.hbs";
+    return "modules/Far-Field-Foundry-Module-main/templates/character-sheet.hbs";
   }
 
   /**

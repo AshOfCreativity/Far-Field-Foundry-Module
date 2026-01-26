@@ -12,7 +12,7 @@ import { VESSEL_QUALITIES } from "./vessel-qualities.mjs";
 import { FAR_FIELD_SKILLS, FAR_FIELD_EDGES, getDefaultSkills } from "./character-data.mjs";
 
 // Module ID
-export const MODULE_ID = "lancer-far-field";
+export const MODULE_ID = "Far-Field-Foundry-Module-main";
 
 // Flag keys
 export const FLAGS = {
@@ -389,7 +389,7 @@ async function createVessel(name = "New Vessel") {
             const actor = await Actor.create({
               name: vesselName,
               type: "pilot",
-              img: "modules/lancer-far-field/assets/vessel-icon.svg",
+              img: "modules/Far-Field-Foundry-Module-main/assets/vessel-icon.svg",
               flags: {
                 [MODULE_ID]: {
                   [FLAGS.isVessel]: true,
@@ -445,7 +445,7 @@ async function createCharacter(name = "New Character") {
             const actor = await Actor.create({
               name: characterName,
               type: "pilot",
-              img: "modules/lancer-far-field/assets/character-icon.svg",
+              img: "modules/Far-Field-Foundry-Module-main/assets/character-icon.svg",
               flags: {
                 [MODULE_ID]: {
                   [FLAGS.isCharacter]: true,
@@ -483,13 +483,13 @@ Hooks.on("preCreateActor", (actor, data, options, userId) => {
 
   if (actorIsVessel && !data.img) {
     actor.updateSource({
-      img: "modules/lancer-far-field/assets/vessel-icon.svg"
+      img: "modules/Far-Field-Foundry-Module-main/assets/vessel-icon.svg"
     });
   }
 
   if (actorIsCharacter && !data.img) {
     actor.updateSource({
-      img: "modules/lancer-far-field/assets/character-icon.svg"
+      img: "modules/Far-Field-Foundry-Module-main/assets/character-icon.svg"
     });
   }
 });

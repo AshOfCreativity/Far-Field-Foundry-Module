@@ -15,7 +15,7 @@ export class VesselSheet extends ActorSheet {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["lancer", "sheet", "actor", "vessel-sheet"],
-      template: "modules/lancer-far-field/templates/vessel-sheet.hbs",
+      template: "modules/Far-Field-Foundry-Module-main/templates/vessel-sheet.hbs",
       width: 800,
       height: 700,
       tabs: [
@@ -31,7 +31,7 @@ export class VesselSheet extends ActorSheet {
 
   /** @override */
   get template() {
-    return "modules/lancer-far-field/templates/vessel-sheet.hbs";
+    return "modules/Far-Field-Foundry-Module-main/templates/vessel-sheet.hbs";
   }
 
   /**
@@ -139,10 +139,10 @@ export class VesselSheet extends ActorSheet {
       i.type === "pilot_armor"
     ).map(i => {
       // Check for Far Field gear flags
-      const isFarFieldGear = i.getFlag("lancer-far-field", "isFarFieldGear") || false;
-      const ffTrack = i.getFlag("lancer-far-field", "track") || 4;
-      const ffMarked = i.getFlag("lancer-far-field", "marked") || 0;
-      const ffBurned = i.getFlag("lancer-far-field", "burned") || 0;
+      const isFarFieldGear = i.getFlag("Far-Field-Foundry-Module-main", "isFarFieldGear") || false;
+      const ffTrack = i.getFlag("Far-Field-Foundry-Module-main", "track") || 4;
+      const ffMarked = i.getFlag("Far-Field-Foundry-Module-main", "marked") || 0;
+      const ffBurned = i.getFlag("Far-Field-Foundry-Module-main", "burned") || 0;
 
       return {
         id: i.id,
@@ -701,8 +701,8 @@ export class VesselSheet extends ActorSheet {
     const item = this.actor.items.get(itemId);
     if (!item) return;
 
-    const currentMarked = item.getFlag("lancer-far-field", "marked") || 0;
-    const burned = item.getFlag("lancer-far-field", "burned") || 0;
+    const currentMarked = item.getFlag("Far-Field-Foundry-Module-main", "marked") || 0;
+    const burned = item.getFlag("Far-Field-Foundry-Module-main", "burned") || 0;
 
     // Can't mark burned boxes
     if (boxIndex <= burned) return;
@@ -718,7 +718,7 @@ export class VesselSheet extends ActorSheet {
     // Ensure marked is at least equal to burned
     newMarked = Math.max(newMarked, burned);
 
-    await item.setFlag("lancer-far-field", "marked", newMarked);
+    await item.setFlag("Far-Field-Foundry-Module-main", "marked", newMarked);
   }
 
   /**
@@ -735,8 +735,8 @@ export class VesselSheet extends ActorSheet {
     const item = this.actor.items.get(itemId);
     if (!item) return;
 
-    const currentBurned = item.getFlag("lancer-far-field", "burned") || 0;
-    const track = item.getFlag("lancer-far-field", "track") || 4;
+    const currentBurned = item.getFlag("Far-Field-Foundry-Module-main", "burned") || 0;
+    const track = item.getFlag("Far-Field-Foundry-Module-main", "track") || 4;
 
     // Toggle: if clicking at or below current burn, reduce; otherwise increase
     let newBurned;
@@ -750,11 +750,11 @@ export class VesselSheet extends ActorSheet {
     newBurned = Math.max(0, Math.min(newBurned, track));
 
     // Update burned and ensure marked is at least burned
-    await item.setFlag("lancer-far-field", "burned", newBurned);
+    await item.setFlag("Far-Field-Foundry-Module-main", "burned", newBurned);
 
-    const currentMarked = item.getFlag("lancer-far-field", "marked") || 0;
+    const currentMarked = item.getFlag("Far-Field-Foundry-Module-main", "marked") || 0;
     if (currentMarked < newBurned) {
-      await item.setFlag("lancer-far-field", "marked", newBurned);
+      await item.setFlag("Far-Field-Foundry-Module-main", "marked", newBurned);
     }
   }
 }
