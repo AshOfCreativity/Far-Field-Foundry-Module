@@ -1,0 +1,397 @@
+<form class="vessel-sheet {{cssClass}}" autocomplete="off">
+  {{!-- Sheet Header --}}
+  <header class="sheet-header">
+    <div class="header-content">
+      <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="100" width="100"/>
+      <div class="header-fields">
+        <h1 class="charname">
+          <input name="name" type="text" value="{{actor.name}}" placeholder="Vessel Name"/>
+        </h1>
+        <div class="vessel-class">
+          <label>Ship Class:</label>
+          <select name="vessel.class">
+            {{#each classOptions}}
+            <option value="{{value}}" {{#if (eq value ../vessel.class)}}selected{{/if}}>{{label}}</option>
+            {{/each}}
+          </select>
+        </div>
+        <div class="vessel-status-summary">
+          <span class="status-indicator {{vessel.overallStatus}}">
+            {{#if (eq vessel.overallStatus "nominal")}}NOMINAL{{/if}}
+            {{#if (eq vessel.overallStatus "caution")}}CAUTION{{/if}}
+            {{#if (eq vessel.overallStatus "warning")}}WARNING{{/if}}
+            {{#if (eq vessel.overallStatus "critical")}}CRITICAL{{/if}}
+          </span>
+          <span class="hull-summary">Hull: {{vessel.hull.value}}/{{vessel.hull.max}}</span>
+          <span class="supplies-summary">Supplies: {{vessel.supplies.value}}/{{vessel.supplies.max}}</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  {{!-- Sheet Tab Navigation --}}
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="overview">Overview</a>
+    <a class="item" data-tab="qualities">Qualities</a>
+    <a class="item" data-tab="crew">Crew</a>
+    <a class="item" data-tab="status">Status</a>
+    <a class="item" data-tab="cargo">Cargo</a>
+    <a class="item" data-tab="log">Mission Log</a>
+  </nav>
+
+  {{!-- Sheet Body --}}
+  <section class="sheet-body">
+
+    {{!-- Overview Tab --}}
+    <div class="tab overview" data-group="primary" data-tab="overview">
+      <div class="overview-grid">
+        {{!-- Description --}}
+        <div class="section description-section">
+          <h3>Description</h3>
+          <div class="editor-container">
+            {{editor vessel.description target="flags.lancer-far-field.vessel.description" button=true owner=owner editable=editable}}
+          </div>
+        </div>
+
+        {{!-- Quick Status --}}
+        <div class="section quick-status">
+          <h3>Ship Status</h3>
+          <div class="status-grid">
+            <div class="status-item hull-status">
+              <label>Hull Integrity</label>
+              <div class="hull-track">
+                {{{vesselHullBoxes vessel.hull}}}
+              </div>
+              <span class="status-value">{{vessel.hull.value}} / {{vessel.hull.max}}</span>
+            </div>
+            <div class="status-item supplies-status">
+              <label>Supplies</label>
+              <div class="supply-track">
+                {{{vesselSupplyBoxes vessel.supplies}}}
+              </div>
+              <span class="status-value">{{vessel.supplies.value}} / {{vessel.supplies.max}}</span>
+            </div>
+            <div class="status-item systems-status">
+              <label>Systems</label>
+              <span class="systems-value {{vesselStatusClass vessel.systemsStatus}}">
+                {{vessel.systemsStatus}}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {{!-- Qualities Summary --}}
+        <div class="section qualities-summary">
+          <h3>Vessel Qualities ({{vessel.qualities.length}}/3)</h3>
+          {{#if vessel.qualities.length}}
+          <ul class="qualities-list-mini">
+            {{#each vessel.qualities}}
+            <li class="quality-mini">
+              <strong>{{name}}</strong>
+            </li>
+            {{/each}}
+          </ul>
+          {{else}}
+          <p class="empty-notice">No qualities selected. Go to the Qualities tab to add them.</p>
+          {{/if}}
+        </div>
+
+        {{!-- Crew Summary --}}
+        <div class="section crew-summary">
+          <h3>Crew Roster ({{crew.length}})</h3>
+          {{#if crew.length}}
+          <ul class="crew-list-mini">
+            {{#each crew}}
+            <li class="crew-mini">
+              {{#if pilot}}
+              <img src="{{pilot.img}}" class="crew-portrait-mini" />
+              {{/if}}
+              <span class="crew-name-mini">{{name}}</span>
+              {{#if role}}<span class="crew-role-mini">- {{role}}</span>{{/if}}
+            </li>
+            {{/each}}
+          </ul>
+          {{else}}
+          <p class="empty-notice">No crew assigned. Go to the Crew tab or drag pilots here.</p>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+
+    {{!-- Qualities Tab --}}
+    <div class="tab qualities" data-group="primary" data-tab="qualities">
+      <div class="qualities-header">
+        <h3>Vessel Qualities</h3>
+        <p class="info-text">Select 2-3 qualities that define your vessel's unique capabilities.</p>
+        {{#if editable}}
+        <div class="quality-buttons">
+          <button type="button" class="add-quality">
+            <i class="fas fa-plus"></i> Add Quality
+          </button>
+          <button type="button" class="create-custom-quality">
+            <i class="fas fa-wrench"></i> Create Custom Quality
+          </button>
+        </div>
+        {{/if}}
+      </div>
+
+      <div class="qualities-list">
+        {{#each vessel.qualities}}
+        <div class="quality-item" data-quality-id="{{id}}">
+          <div class="quality-header">
+            <h4 class="quality-name">{{name}}</h4>
+            {{#if ../editable}}
+            <button type="button" class="remove-quality" data-quality-id="{{id}}" title="Remove Quality">
+              <i class="fas fa-trash"></i>
+            </button>
+            {{/if}}
+          </div>
+          <div class="quality-description">{{description}}</div>
+        </div>
+        {{else}}
+        <div class="empty-qualities">
+          <p>No vessel qualities selected.</p>
+          <p class="hint">Click "Add Quality" to choose from available options.</p>
+        </div>
+        {{/each}}
+      </div>
+
+      {{#if availableQualities.length}}
+      <div class="available-qualities collapsed">
+        <h4 class="available-header" onclick="this.parentElement.classList.toggle('collapsed')">
+          <i class="fas fa-chevron-right"></i> Available Qualities ({{availableQualities.length}})
+        </h4>
+        <div class="available-list">
+          {{#each availableQualities}}
+          <div class="quality-option" data-quality-id="{{id}}">
+            <div class="quality-option-header">
+              <span class="quality-option-name">{{name}}</span>
+              <button type="button" class="select-quality" data-quality-id="{{id}}">
+                <i class="fas fa-plus"></i>
+              </button>
+            </div>
+            <div class="quality-option-desc">{{description}}</div>
+          </div>
+          {{/each}}
+        </div>
+      </div>
+      {{/if}}
+    </div>
+
+    {{!-- Crew Tab --}}
+    <div class="tab crew" data-group="primary" data-tab="crew">
+      <div class="crew-header">
+        <h3>Crew Roster</h3>
+        <p class="info-text">Manage the key crew members aboard your vessel. Drag pilot actors here to link them.</p>
+        {{#if editable}}
+        <button type="button" class="add-crew">
+          <i class="fas fa-user-plus"></i> Add Crew Member
+        </button>
+        {{/if}}
+      </div>
+
+      <div class="crew-list">
+        {{#each crew}}
+        <div class="crew-item" data-index="{{index}}">
+          <div class="crew-portrait-container">
+            {{#if pilot}}
+            <img src="{{pilot.img}}" class="crew-portrait" />
+            <button type="button" class="open-pilot" data-pilot-id="{{pilot.id}}" title="Open Pilot Sheet">
+              <i class="fas fa-external-link-alt"></i>
+            </button>
+            {{else}}
+            <div class="crew-portrait placeholder">
+              <i class="fas fa-user"></i>
+            </div>
+            {{/if}}
+          </div>
+
+          <div class="crew-details">
+            <div class="crew-field name-field">
+              <input type="text" name="crew.{{index}}.name" value="{{name}}" placeholder="Crew Name" {{#unless ../editable}}disabled{{/unless}}/>
+            </div>
+            <div class="crew-field role-field">
+              <input type="text" name="crew.{{index}}.role" value="{{role}}" placeholder="Role (e.g., Captain, Engineer)" {{#unless ../editable}}disabled{{/unless}}/>
+            </div>
+            <div class="crew-field pilot-link">
+              <label>Linked Pilot:</label>
+              <select class="link-pilot" {{#unless ../editable}}disabled{{/unless}}>
+                <option value="">-- None --</option>
+                {{#each ../pilots}}
+                <option value="{{id}}" {{#if (eq id ../pilotId)}}selected{{/if}}>{{name}}</option>
+                {{/each}}
+              </select>
+            </div>
+            <div class="crew-field notes-field">
+              <textarea name="crew.{{index}}.notes" placeholder="Notes..." {{#unless ../editable}}disabled{{/unless}}>{{notes}}</textarea>
+            </div>
+          </div>
+
+          {{#if ../editable}}
+          <button type="button" class="remove-crew" title="Remove Crew Member">
+            <i class="fas fa-trash"></i>
+          </button>
+          {{/if}}
+        </div>
+        {{else}}
+        <div class="empty-crew">
+          <p>No crew members assigned.</p>
+          <p class="hint">Click "Add Crew Member" or drag a Pilot actor here.</p>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+
+    {{!-- Status Tab --}}
+    <div class="tab status" data-group="primary" data-tab="status">
+      <div class="status-section">
+        <h3>Ship Status</h3>
+
+        <div class="status-tracks">
+          <div class="track-section hull-section">
+            <h4>Hull Integrity</h4>
+            <p class="track-info">Click boxes to mark damage. Right-click to repair.</p>
+            <div class="hull-track large">
+              {{{vesselHullBoxes vessel.hull}}}
+            </div>
+            <div class="track-value">
+              <input type="number" name="vessel.hull.value" value="{{vessel.hull.value}}" min="0" max="{{vessel.hull.max}}" {{#unless editable}}disabled{{/unless}}/>
+              <span>/</span>
+              <input type="number" name="vessel.hull.max" value="{{vessel.hull.max}}" min="1" {{#unless editable}}disabled{{/unless}}/>
+            </div>
+          </div>
+
+          <div class="track-section supplies-section">
+            <h4>Supplies</h4>
+            <p class="track-info">Click boxes to use supplies.</p>
+            <div class="supply-track large">
+              {{{vesselSupplyBoxes vessel.supplies}}}
+            </div>
+            <div class="track-value">
+              <input type="number" name="vessel.supplies.value" value="{{vessel.supplies.value}}" min="0" max="{{vessel.supplies.max}}" {{#unless editable}}disabled{{/unless}}/>
+              <span>/</span>
+              <input type="number" name="vessel.supplies.max" value="{{vessel.supplies.max}}" min="1" {{#unless editable}}disabled{{/unless}}/>
+            </div>
+          </div>
+
+          <div class="track-section systems-section">
+            <h4>Systems Status</h4>
+            <select name="vessel.systemsStatus" {{#unless editable}}disabled{{/unless}}>
+              {{#each statusOptions}}
+              <option value="{{value}}" {{#if (eq value ../vessel.systemsStatus)}}selected{{/if}}>{{label}}</option>
+              {{/each}}
+            </select>
+          </div>
+        </div>
+
+        <div class="status-notes-section">
+          <h4>Status Notes</h4>
+          <div class="editor-container">
+            {{editor vessel.statusNotes target="flags.lancer-far-field.vessel.statusNotes" button=true owner=owner editable=editable}}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{!-- Cargo/Supplies Tab --}}
+    <div class="tab cargo" data-group="primary" data-tab="cargo">
+      <div class="cargo-section">
+        <h3>Ship Cargo & Reserves</h3>
+        <p class="info-text">Drag reserves from the LANCER compendium. For Far Field gear with track/burn mechanics, open the item and enable "Far Field Gear".</p>
+
+        {{!-- LANCER Reserves (native items) --}}
+        <div class="cargo-subsection reserves-subsection">
+          <h4>Reserves & Gear</h4>
+          <div class="reserves-list item-list">
+            {{#each reserves}}
+            <div class="reserve-item cargo-item {{#if used}}used{{/if}} {{#if isFarFieldGear}}far-field-gear{{/if}}" data-item-id="{{id}}">
+              <img class="reserve-img" src="{{img}}" alt="{{name}}" width="32" height="32"/>
+              <div class="reserve-details">
+                <h4 class="reserve-name">{{name}}</h4>
+                <span class="reserve-type">{{type}}{{#if isFarFieldGear}} <span class="ff-badge">FF</span>{{/if}}</span>
+
+                {{!-- Far Field gear track UI --}}
+                {{#if isFarFieldGear}}
+                <div class="ff-track-container">
+                  <div class="ff-track">
+                    {{#each (range 1 ffTrack)}}
+                    <span class="ff-track-box
+                      {{#if (lte this ../ffMarked)}}marked{{/if}}
+                      {{#if (lte this ../ffBurned)}}burned{{/if}}"
+                      data-box="{{this}}"
+                      title="Left-click: mark, Right-click: burn">
+                    </span>
+                    {{/each}}
+                  </div>
+                  <span class="ff-track-status">{{ffMarked}}/{{ffTrack}}{{#if ffBurned}} ({{ffBurned}} burned){{/if}}</span>
+                </div>
+                {{/if}}
+              </div>
+              <div class="reserve-controls">
+                {{#if ../editable}}
+                {{!-- Only show used toggle for non-Far Field gear --}}
+                {{#unless isFarFieldGear}}
+                <a class="reserve-control reserve-toggle-used" title="{{#if used}}Mark Available{{else}}Mark Used{{/if}}">
+                  <i class="fas {{#if used}}fa-check-square{{else}}fa-square{{/if}}"></i>
+                </a>
+                {{/unless}}
+                <a class="reserve-control reserve-open" title="Open">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <a class="reserve-control reserve-delete" title="Delete">
+                  <i class="fas fa-trash"></i>
+                </a>
+                {{/if}}
+              </div>
+            </div>
+            {{else}}
+            <div class="empty-list">
+              <p>No reserves or gear.</p>
+              <p class="hint">Drag items from the LANCER compendium here to add reserves.</p>
+            </div>
+            {{/each}}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    {{!-- Mission Log Tab --}}
+    <div class="tab log" data-group="primary" data-tab="log">
+      <div class="log-section">
+        <h3>Mission Log</h3>
+
+        {{#if editable}}
+        <div class="add-log-section">
+          <textarea class="new-log-content" placeholder="Enter a new log entry..."></textarea>
+          <button type="button" class="add-log-entry">
+            <i class="fas fa-plus"></i> Add Entry
+          </button>
+        </div>
+        {{/if}}
+
+        <div class="log-entries">
+          {{#each missionLog}}
+          <div class="log-entry" data-timestamp="{{timestamp}}">
+            <div class="log-header">
+              <span class="log-date">{{date}}</span>
+              {{#if ../editable}}
+              <button type="button" class="remove-log-entry" data-timestamp="{{timestamp}}" title="Delete Entry">
+                <i class="fas fa-trash"></i>
+              </button>
+              {{/if}}
+            </div>
+            <div class="log-content">{{{content}}}</div>
+          </div>
+          {{else}}
+          <div class="empty-log">
+            <p>No log entries yet.</p>
+            <p class="hint">Add entries above to track your mission progress.</p>
+          </div>
+          {{/each}}
+        </div>
+      </div>
+    </div>
+
+  </section>
+</form>

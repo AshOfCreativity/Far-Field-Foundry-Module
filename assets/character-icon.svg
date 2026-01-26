@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="helmet" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3a3a5e"/>
+      <stop offset="100%" style="stop-color:#1a1a2e"/>
+    </linearGradient>
+    <linearGradient id="visor" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ff88"/>
+      <stop offset="100%" style="stop-color:#00aa66"/>
+    </linearGradient>
+    <linearGradient id="suit" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#252540"/>
+      <stop offset="100%" style="stop-color:#1a1a2e"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Helmet outer shell -->
+  <ellipse cx="50" cy="35" rx="24" ry="26" fill="url(#helmet)" stroke="#00ff88" stroke-width="1.5"/>
+
+  <!-- Helmet visor -->
+  <ellipse cx="50" cy="37" rx="16" ry="14" fill="url(#suit)" stroke="#00ff88" stroke-width="1"/>
+
+  <!-- Visor reflection -->
+  <ellipse cx="50" cy="37" rx="14" ry="12" fill="none" stroke="url(#visor)" stroke-width="2" opacity="0.8"/>
+  <path d="M 40 32 Q 50 28 60 32" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.5"/>
+
+  <!-- Helmet details -->
+  <circle cx="32" cy="35" r="3" fill="#252540" stroke="#ff6b35" stroke-width="1"/>
+  <circle cx="68" cy="35" r="3" fill="#252540" stroke="#ff6b35" stroke-width="1"/>
+
+  <!-- Neck ring -->
+  <ellipse cx="50" cy="58" rx="18" ry="6" fill="url(#helmet)" stroke="#00ff88" stroke-width="1"/>
+
+  <!-- Suit body -->
+  <path d="M 32 58 L 25 85 L 40 85 L 45 70 L 55 70 L 60 85 L 75 85 L 68 58"
+        fill="url(#suit)" stroke="#00ff88" stroke-width="1"/>
+
+  <!-- Suit chest panel -->
+  <rect x="40" y="62" width="20" height="8" rx="2" fill="#252540" stroke="#00ff88" stroke-width="1"/>
+
+  <!-- Status lights on chest -->
+  <circle cx="45" cy="66" r="2" fill="#00ff88" opacity="0.8"/>
+  <circle cx="50" cy="66" r="2" fill="#ff6b35" opacity="0.6"/>
+  <circle cx="55" cy="66" r="2" fill="#00ff88" opacity="0.8"/>
+
+  <!-- Shoulder pads -->
+  <ellipse cx="30" cy="60" rx="6" ry="4" fill="url(#helmet)" stroke="#00ff88" stroke-width="1"/>
+  <ellipse cx="70" cy="60" rx="6" ry="4" fill="url(#helmet)" stroke="#00ff88" stroke-width="1"/>
+
+  <!-- Stars -->
+  <circle cx="12" cy="12" r="1" fill="#fff" opacity="0.7"/>
+  <circle cx="88" cy="15" r="0.5" fill="#fff" opacity="0.5"/>
+  <circle cx="8" cy="75" r="1" fill="#fff" opacity="0.6"/>
+  <circle cx="92" cy="70" r="0.5" fill="#fff" opacity="0.4"/>
+  <circle cx="15" cy="45" r="0.5" fill="#fff" opacity="0.5"/>
+  <circle cx="85" cy="50" r="1" fill="#fff" opacity="0.6"/>
+</svg>

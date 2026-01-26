@@ -1,0 +1,204 @@
+{
+  "VESSEL": {
+    "ActorType": "Vessel",
+    "SheetTitle": "Ranger Vessel",
+    "SupplySheetTitle": "Vessel Supply",
+    "ItemType": "Vessel Supply",
+    "Tabs": {
+      "Overview": "Overview",
+      "Qualities": "Qualities",
+      "Crew": "Crew",
+      "Status": "Status",
+      "Supplies": "Supplies",
+      "Cargo": "Cargo",
+      "Log": "Log"
+    },
+    "Fields": {
+      "Name": "Vessel Name",
+      "Class": "Ship Class",
+      "Description": "Description",
+      "HullIntegrity": "Hull Integrity",
+      "Systems": "Systems Status",
+      "Supplies": "Supplies",
+      "StatusNotes": "Status Notes"
+    },
+    "Qualities": {
+      "Title": "Vessel Qualities",
+      "Add": "Add Quality",
+      "Remove": "Remove",
+      "Description": "Select 2-3 qualities that define your vessel's capabilities."
+    },
+    "Crew": {
+      "Title": "Crew Roster",
+      "Add": "Add Crew Member",
+      "Name": "Name",
+      "Role": "Role",
+      "Notes": "Notes",
+      "LinkedPilot": "Linked Pilot"
+    },
+    "Status": {
+      "Operational": "Operational",
+      "Damaged": "Damaged",
+      "Critical": "Critical",
+      "Offline": "Offline"
+    },
+    "Log": {
+      "Title": "Mission Log",
+      "AddEntry": "Add Entry",
+      "Date": "Date",
+      "Content": "Entry"
+    },
+    "Supply": {
+      "Title": "Vessel Supply",
+      "Type": "Supply Type",
+      "Track": "Track",
+      "Marked": "Marked",
+      "Burned": "Burned",
+      "Remaining": "Remaining",
+      "Quantity": "Quantity",
+      "Description": "Description",
+      "Types": {
+        "Equipment": "Equipment",
+        "Consumable": "Consumable",
+        "Supply": "Supply"
+      },
+      "Status": {
+        "Available": "Available",
+        "Low": "Low",
+        "Exhausted": "Exhausted",
+        "Depleted": "Depleted"
+      }
+    },
+    "Cargo": {
+      "Title": "Ship Cargo",
+      "Supplies": "Trackable Supplies",
+      "Items": "Other Items",
+      "Empty": "No items in cargo.",
+      "DragHint": "Drag items here to add to ship cargo."
+    }
+  },
+  "CHARACTER": {
+    "ActorType": "Character",
+    "SheetTitle": "Far Field Character",
+    "Tabs": {
+      "Overview": "Overview",
+      "Edges": "Edges",
+      "Backgrounds": "Backgrounds",
+      "Skills": "Skills",
+      "Aspects": "Aspects",
+      "Resources": "Resources",
+      "Drives": "Drives & Burdens",
+      "Progression": "Progression"
+    },
+    "Fields": {
+      "Name": "Character Name"
+    },
+    "Edges": {
+      "Title": "Edges",
+      "Description": "Choose 3 edges that define your character's strengths.",
+      "Selected": "Selected",
+      "Steel": "Steel",
+      "Sleight": "Sleight",
+      "Guts": "Guts",
+      "Keen": "Keen",
+      "Vision": "Vision",
+      "Flash": "Flash",
+      "Heart": "Heart"
+    },
+    "Backgrounds": {
+      "Title": "Backgrounds",
+      "Description": "Select your origin, role, and discipline.",
+      "Origin": "Origin",
+      "Role": "Role",
+      "Discipline": "Discipline",
+      "OriginDescription": "Where you came from and what shaped your early life.",
+      "RoleDescription": "Your function within the Far Field team.",
+      "DisciplineDescription": "Your academic or professional specialization."
+    },
+    "Skills": {
+      "Title": "Skills",
+      "Description": "Click rank pips to set skill level. Click failure boxes to mark failures.",
+      "Assault": "Assault",
+      "Endure": "Endure",
+      "Control": "Control",
+      "Observe": "Observe",
+      "Conceal": "Conceal",
+      "Tend": "Tend",
+      "Hack": "Hack",
+      "Fix": "Fix",
+      "Pilot": "Pilot",
+      "Navigate": "Navigate",
+      "Investigate": "Investigate",
+      "Organize": "Organize",
+      "Interpret": "Interpret",
+      "Sway": "Sway"
+    },
+    "Aspects": {
+      "Title": "Aspects",
+      "Description": "Left-click boxes to mark, right-click to burn.",
+      "YourAspects": "Your Aspects",
+      "Available": "Available Aspects from Backgrounds",
+      "Add": "Add Aspect",
+      "Remove": "Remove",
+      "Types": {
+        "Expertise": "Expertise",
+        "Equipment": "Equipment",
+        "Consumable": "Consumable"
+      }
+    },
+    "Resources": {
+      "Title": "Resources",
+      "Description": "Track supplies, equipment, and consumables.",
+      "Add": "Add Resource",
+      "Remove": "Remove",
+      "Types": {
+        "Equipment": "Equipment",
+        "Consumable": "Consumable",
+        "Supply": "Supply"
+      }
+    },
+    "Drives": {
+      "Title": "Drives",
+      "Description": "Your character's motivations and goals.",
+      "Add": "Add Drive",
+      "Remove": "Remove",
+      "Note": "Notes"
+    },
+    "Burdens": {
+      "Title": "Burdens",
+      "Description": "Consequences and conditions affecting your character.",
+      "Add": "Add Burden",
+      "Remove": "Remove",
+      "Severity": {
+        "Minor": "Minor",
+        "Standard": "Standard",
+        "Major": "Major"
+      }
+    },
+    "Milestones": {
+      "Title": "Milestones",
+      "Description": "Record significant moments tied to your drives.",
+      "Add": "Record Milestone",
+      "Remove": "Remove",
+      "Available": "Available",
+      "Spent": "Spent",
+      "Drive": "Associated Drive",
+      "Note": "Description"
+    },
+    "Progression": {
+      "Title": "Advancement",
+      "Description": "Spend milestones to improve your character.",
+      "SkillRank": "+1 Skill Rank",
+      "NewSkill": "New Skill at Rank 1",
+      "AspectBox": "+1 Aspect Box",
+      "BackgroundAspect": "New Background Aspect",
+      "AnyAspect": "Any Aspect",
+      "Cost": "Cost",
+      "History": "Progression History"
+    },
+    "Track": {
+      "Marked": "Marked",
+      "Burned": "Burned"
+    }
+  }
+}

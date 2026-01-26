@@ -1,0 +1,543 @@
+<form class="character-sheet far-field-character {{cssClass}}" autocomplete="off">
+  {{!-- Sheet Header --}}
+  <header class="sheet-header">
+    <div class="header-content">
+      <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="100" width="100"/>
+      <div class="header-fields">
+        <h1 class="charname">
+          <input name="name" type="text" value="{{actor.name}}" placeholder="Character Name"/>
+        </h1>
+        <div class="character-summary">
+          <div class="edges-summary">
+            <span class="summary-label">Edges:</span>
+            {{#each selectedEdgeIds}}
+            <span class="edge-badge">{{this}}</span>
+            {{else}}
+            <span class="empty-badge">None selected</span>
+            {{/each}}
+          </div>
+          <div class="backgrounds-summary">
+            {{#if selectedOrigin}}<span class="bg-badge origin">{{selectedOrigin.name}}</span>{{/if}}
+            {{#if selectedRole}}<span class="bg-badge role">{{selectedRole.name}}</span>{{/if}}
+            {{#if selectedDiscipline}}<span class="bg-badge discipline">{{selectedDiscipline.name}}</span>{{/if}}
+          </div>
+        </div>
+      </div>
+      {{#if editable}}
+      <div class="header-actions">
+        <button type="button" class="import-character" title="Import character from web app">
+          <i class="fas fa-file-import"></i> Import
+        </button>
+      </div>
+      {{/if}}
+    </div>
+  </header>
+
+  {{!-- Sheet Tab Navigation --}}
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="overview">Overview</a>
+    <a class="item" data-tab="edges">Edges</a>
+    <a class="item" data-tab="backgrounds">Backgrounds</a>
+    <a class="item" data-tab="skills">Skills</a>
+    <a class="item" data-tab="aspects">Aspects</a>
+    <a class="item" data-tab="resources">Resources</a>
+    <a class="item" data-tab="drives">Drives & Burdens</a>
+    <a class="item" data-tab="progression">Progression</a>
+  </nav>
+
+  {{!-- Sheet Body --}}
+  <section class="sheet-body">
+
+    {{!-- Overview Tab --}}
+    <div class="tab overview" data-group="primary" data-tab="overview">
+      <div class="overview-grid">
+        <div class="section edges-overview">
+          <h3>Edges ({{selectedEdgeCount}}/3)</h3>
+          <div class="edges-list-mini">
+            {{#each allEdges}}
+            {{#if (includes ../selectedEdgeIds this.id)}}
+            <div class="edge-mini selected">
+              <strong>{{name}}</strong>
+              <span class="edge-desc">{{description}}</span>
+            </div>
+            {{/if}}
+            {{/each}}
+            {{#unless selectedEdgeCount}}
+            <p class="empty-notice">No edges selected. Go to the Edges tab to select 3.</p>
+            {{/unless}}
+          </div>
+        </div>
+
+        <div class="section backgrounds-overview">
+          <h3>Backgrounds</h3>
+          <div class="backgrounds-list-mini">
+            {{#if selectedOrigin}}
+            <div class="background-mini">
+              <span class="bg-type">Origin:</span>
+              <strong>{{selectedOrigin.name}}</strong>
+            </div>
+            {{/if}}
+            {{#if selectedRole}}
+            <div class="background-mini">
+              <span class="bg-type">Role:</span>
+              <strong>{{selectedRole.name}}</strong>
+            </div>
+            {{/if}}
+            {{#if selectedDiscipline}}
+            <div class="background-mini">
+              <span class="bg-type">Discipline:</span>
+              <strong>{{selectedDiscipline.name}}</strong>
+            </div>
+            {{/if}}
+            {{#unless selectedOrigin}}{{#unless selectedRole}}{{#unless selectedDiscipline}}
+            <p class="empty-notice">No backgrounds selected.</p>
+            {{/unless}}{{/unless}}{{/unless}}
+          </div>
+        </div>
+
+        <div class="section skills-overview">
+          <h3>Skills</h3>
+          <div class="skills-grid-mini">
+            {{#each skills}}
+            {{#if (gt rank 0)}}
+            <div class="skill-mini">
+              <span class="skill-name">{{name}}</span>
+              <span class="skill-rank-mini">
+                {{#each (range 1 3)}}
+                <span class="pip {{#if (lte this ../rank)}}filled{{/if}}"></span>
+                {{/each}}
+              </span>
+            </div>
+            {{/if}}
+            {{/each}}
+          </div>
+        </div>
+
+        <div class="section status-overview">
+          <h3>Status</h3>
+          <div class="status-summary">
+            <div class="status-item">
+              <span class="status-label">Aspects:</span>
+              <span class="status-value">{{aspects.length}}</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Resources:</span>
+              <span class="status-value">{{resources.length}}</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Drives:</span>
+              <span class="status-value">{{drives.length}}</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Milestones:</span>
+              <span class="status-value">{{availableMilestoneCount}} available</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{!-- Edges Tab --}}
+    <div class="tab edges" data-group="primary" data-tab="edges">
+      <div class="edges-header">
+        <h3>Select Your Edges</h3>
+        <p class="info-text">Choose 3 edges that define your character's strengths and approach.</p>
+        <div class="selection-counter">{{selectedEdgeCount}} / 3 selected</div>
+      </div>
+
+      <div class="edges-grid">
+        {{#each allEdges}}
+        <div class="edge-card {{#if (includes ../selectedEdgeIds this.id)}}selected{{/if}}" data-edge-id="{{id}}">
+          <div class="edge-header">
+            <h4 class="edge-name">{{name}}</h4>
+            <span class="edge-indicator">
+              {{#if (includes ../selectedEdgeIds this.id)}}
+              <i class="fas fa-check-circle"></i>
+              {{else}}
+              <i class="far fa-circle"></i>
+              {{/if}}
+            </span>
+          </div>
+          <div class="edge-description">{{description}}</div>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+
+    {{!-- Backgrounds Tab --}}
+    <div class="tab backgrounds" data-group="primary" data-tab="backgrounds">
+      <div class="backgrounds-header">
+        <h3>Character Backgrounds</h3>
+        <p class="info-text">Select your origin, role, and discipline. These determine your available aspects.</p>
+      </div>
+
+      <div class="backgrounds-grid">
+        {{!-- Origin --}}
+        <div class="background-section">
+          <h4>Origin</h4>
+          <p class="bg-info">Where you came from and what shaped your early life.</p>
+          <select name="background.origin" {{#unless editable}}disabled{{/unless}}>
+            <option value="">-- Select Origin --</option>
+            {{#each originOptions}}
+            <option value="{{id}}" {{#if (eq id ../selectedOrigin.id)}}selected{{/if}}>{{name}}</option>
+            {{/each}}
+          </select>
+          {{#if selectedOrigin}}
+          <div class="bg-description">{{selectedOrigin.description}}</div>
+          {{/if}}
+        </div>
+
+        {{!-- Role --}}
+        <div class="background-section">
+          <h4>Role</h4>
+          <p class="bg-info">Your function within the Far Field team.</p>
+          <select name="background.role" {{#unless editable}}disabled{{/unless}}>
+            <option value="">-- Select Role --</option>
+            {{#each roleOptions}}
+            <option value="{{id}}" {{#if (eq id ../selectedRole.id)}}selected{{/if}}>{{name}}</option>
+            {{/each}}
+          </select>
+          {{#if selectedRole}}
+          <div class="bg-description">{{selectedRole.description}}</div>
+          {{/if}}
+        </div>
+
+        {{!-- Discipline --}}
+        <div class="background-section">
+          <h4>Discipline</h4>
+          <p class="bg-info">Your academic or professional specialization.</p>
+          <select name="background.discipline" {{#unless editable}}disabled{{/unless}}>
+            <option value="">-- Select Discipline --</option>
+            {{#each disciplineOptions}}
+            <option value="{{id}}" {{#if (eq id ../selectedDiscipline.id)}}selected{{/if}}>{{name}}</option>
+            {{/each}}
+          </select>
+          {{#if selectedDiscipline}}
+          <div class="bg-description">{{selectedDiscipline.description}}</div>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+
+    {{!-- Skills Tab --}}
+    <div class="tab skills" data-group="primary" data-tab="skills">
+      <div class="skills-header">
+        <h3>Skills</h3>
+        <p class="info-text">Click rank pips to set skill level (0-3). Click failure boxes to mark failures.</p>
+      </div>
+
+      <div class="skills-list">
+        {{#each skills}}
+        <div class="skill-row" data-skill-id="{{id}}">
+          <div class="skill-info">
+            <span class="skill-name">{{name}}</span>
+            <span class="skill-desc">{{description}}</span>
+          </div>
+          <div class="skill-rank">
+            {{#each (range 1 3)}}
+            <span class="skill-rank-pip {{#if (lte this ../rank)}}filled{{/if}}"
+                  data-skill-id="{{../id}}"
+                  data-rank="{{this}}">
+            </span>
+            {{/each}}
+          </div>
+          <div class="skill-failures">
+            {{#if (gt rank 0)}}
+            {{#each (range 0 (subtract rank 1))}}
+            <span class="skill-failure-box {{#if (includes ../failures this)}}marked{{/if}}"
+                  data-skill-id="{{../id}}"
+                  data-box="{{this}}">
+            </span>
+            {{/each}}
+            {{/if}}
+          </div>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+
+    {{!-- Aspects Tab --}}
+    <div class="tab aspects" data-group="primary" data-tab="aspects">
+      <div class="aspects-header">
+        <h3>Aspects</h3>
+        <p class="info-text">Left-click boxes to mark, right-click to burn. Add aspects from your backgrounds below or create custom ones.</p>
+        {{#if editable}}
+        <div class="aspect-buttons">
+          <button type="button" class="add-any-aspect">
+            <i class="fas fa-book-open"></i> Add Aspect from Any Background
+          </button>
+          <button type="button" class="create-custom-aspect">
+            <i class="fas fa-plus"></i> Create Custom Aspect
+          </button>
+        </div>
+        {{/if}}
+      </div>
+
+      {{!-- Current Aspects --}}
+      <div class="aspects-section">
+        <h4>Your Aspects</h4>
+        {{#if aspects.length}}
+        <div class="aspects-list">
+          {{#each aspects}}
+          <div class="aspect-item" data-aspect-id="{{id}}">
+            <div class="aspect-header">
+              <span class="aspect-name">{{name}}</span>
+              <span class="aspect-type-badge {{type}}">{{type}}</span>
+              <span class="aspect-source {{#if (eq source 'custom')}}custom{{/if}}">{{sourceName}}</span>
+              {{#if ../editable}}
+              <button type="button" class="remove-aspect" data-aspect-id="{{id}}" title="Remove">
+                <i class="fas fa-trash"></i>
+              </button>
+              {{/if}}
+            </div>
+            <div class="aspect-track">
+              {{#each (range 1 track)}}
+              <span class="aspect-track-box
+                {{#if (lte this ../marked)}}marked{{/if}}
+                {{#if (lte this ../burned)}}burned{{/if}}"
+                data-aspect-id="{{../id}}"
+                data-box="{{this}}">
+              </span>
+              {{/each}}
+              <span class="track-status">{{marked}}/{{track}} ({{burned}} burned)</span>
+            </div>
+            <div class="aspect-description">{{description}}</div>
+          </div>
+          {{/each}}
+        </div>
+        {{else}}
+        <p class="empty-notice">No aspects added yet. Select aspects from your backgrounds below.</p>
+        {{/if}}
+      </div>
+
+      {{!-- Available Aspects --}}
+      {{#if unaddedAspects.length}}
+      <div class="aspects-section available-aspects">
+        <h4>Available Aspects from Backgrounds</h4>
+        <div class="available-aspects-list">
+          {{#each unaddedAspects}}
+          <div class="available-aspect-item">
+            <div class="aspect-header">
+              <span class="aspect-name">{{name}}</span>
+              <span class="aspect-type-badge {{type}}">{{type}}</span>
+              <span class="aspect-source">{{sourceName}}</span>
+              <span class="aspect-track-info">Track: {{track}}</span>
+              {{#if ../editable}}
+              <button type="button" class="add-aspect" data-aspect-id="{{id}}" title="Add Aspect">
+                <i class="fas fa-plus"></i>
+              </button>
+              {{/if}}
+            </div>
+            <div class="aspect-description">{{description}}</div>
+          </div>
+          {{/each}}
+        </div>
+      </div>
+      {{/if}}
+    </div>
+
+    {{!-- Resources Tab --}}
+    <div class="tab resources" data-group="primary" data-tab="resources">
+      <div class="resources-header">
+        <h3>Resources</h3>
+        <p class="info-text">Track supplies, equipment, and consumables. Left-click to mark, right-click to burn.</p>
+        {{#if editable}}
+        <button type="button" class="add-resource">
+          <i class="fas fa-plus"></i> Add Resource
+        </button>
+        {{/if}}
+      </div>
+
+      <div class="resources-list">
+        {{#each resources}}
+        <div class="resource-item" data-resource-id="{{id}}">
+          <div class="resource-header">
+            <span class="resource-type-badge {{type}}">{{type}}</span>
+            <span class="resource-name">{{name}}</span>
+            {{#if ../editable}}
+            <button type="button" class="remove-resource" data-resource-id="{{id}}" title="Remove">
+              <i class="fas fa-trash"></i>
+            </button>
+            {{/if}}
+          </div>
+          <div class="resource-track">
+            {{#each (range 1 track)}}
+            <span class="resource-track-box
+              {{#if (lte this ../marked)}}marked{{/if}}
+              {{#if (lte this ../burned)}}burned{{/if}}"
+              data-resource-id="{{../id}}"
+              data-box="{{this}}">
+            </span>
+            {{/each}}
+            <span class="track-status">{{marked}}/{{track}} ({{burned}} burned)</span>
+          </div>
+        </div>
+        {{else}}
+        <div class="empty-resources">
+          <p>No resources added yet.</p>
+          <p class="hint">Click "Add Resource" to track supplies and equipment.</p>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+
+    {{!-- Drives & Burdens Tab --}}
+    <div class="tab drives" data-group="primary" data-tab="drives">
+      {{!-- Drives Section --}}
+      <div class="drives-section">
+        <div class="section-header">
+          <h3>Drives</h3>
+          <p class="info-text">Your character's motivations and goals.</p>
+          {{#if editable}}
+          <button type="button" class="add-drive">
+            <i class="fas fa-plus"></i> Add Drive
+          </button>
+          {{/if}}
+        </div>
+
+        <div class="drives-list">
+          {{#each drives}}
+          <div class="drive-item" data-drive-id="{{id}}">
+            <div class="drive-header">
+              <input type="text" name="drive.{{id}}.name" value="{{name}}" placeholder="Drive name..." {{#unless ../editable}}disabled{{/unless}}/>
+              {{#if ../editable}}
+              <button type="button" class="remove-drive" data-drive-id="{{id}}" title="Remove">
+                <i class="fas fa-trash"></i>
+              </button>
+              {{/if}}
+            </div>
+            <textarea name="drive.{{id}}.note" placeholder="Notes..." {{#unless ../editable}}disabled{{/unless}}>{{note}}</textarea>
+          </div>
+          {{else}}
+          <div class="empty-drives">
+            <p>No drives defined yet.</p>
+            <p class="hint">Click "Add Drive" to define your character's motivations.</p>
+          </div>
+          {{/each}}
+        </div>
+      </div>
+
+      {{!-- Burdens Section --}}
+      <div class="burdens-section">
+        <div class="section-header">
+          <h3>Burdens</h3>
+          <p class="info-text">Consequences and conditions affecting your character. Left-click to mark, right-click to burn.</p>
+          {{#if editable}}
+          <button type="button" class="add-burden">
+            <i class="fas fa-plus"></i> Add Burden
+          </button>
+          {{/if}}
+        </div>
+
+        <div class="burdens-list">
+          {{#each burdens}}
+          <div class="burden-item" data-burden-id="{{id}}">
+            <div class="burden-header">
+              <span class="burden-name">{{name}}</span>
+              {{#if ../editable}}
+              <button type="button" class="remove-burden" data-burden-id="{{id}}" title="Remove">
+                <i class="fas fa-trash"></i>
+              </button>
+              {{/if}}
+            </div>
+            <div class="burden-track">
+              {{#each (range 1 track)}}
+              <span class="burden-track-box
+                {{#if (lte this ../marked)}}marked{{/if}}
+                {{#if (lte this ../burned)}}burned{{/if}}"
+                data-burden-id="{{../id}}"
+                data-box="{{this}}">
+              </span>
+              {{/each}}
+              <span class="track-status">{{marked}}/{{track}}</span>
+            </div>
+          </div>
+          {{else}}
+          <div class="empty-burdens">
+            <p>No burdens.</p>
+            <p class="hint">Burdens represent consequences and conditions affecting your character.</p>
+          </div>
+          {{/each}}
+        </div>
+      </div>
+    </div>
+
+    {{!-- Progression Tab --}}
+    <div class="tab progression" data-group="primary" data-tab="progression">
+      {{!-- Milestones Section --}}
+      <div class="milestones-section">
+        <div class="section-header">
+          <h3>Milestones</h3>
+          <p class="info-text">Record significant moments tied to your drives. Milestones are pooled across the team.</p>
+          <div class="milestone-count">
+            <strong>{{availableMilestoneCount}}</strong> unspent milestones
+          </div>
+          {{#if editable}}
+          <button type="button" class="add-milestone">
+            <i class="fas fa-plus"></i> Record Milestone
+          </button>
+          {{/if}}
+        </div>
+
+        <div class="milestones-list">
+          {{#each milestones}}
+          <div class="milestone-item {{#if spent}}spent{{/if}}" data-milestone-id="{{id}}">
+            <div class="milestone-header">
+              <span class="milestone-status">{{#if spent}}<i class="fas fa-check"></i> Spent{{else}}<i class="fas fa-star"></i> Available{{/if}}</span>
+              {{#if ../editable}}
+              <button type="button" class="remove-milestone" data-milestone-id="{{id}}" title="Remove">
+                <i class="fas fa-trash"></i>
+              </button>
+              {{/if}}
+            </div>
+            <div class="milestone-note">{{note}}</div>
+            <div class="milestone-date">{{recordedAt}}</div>
+          </div>
+          {{else}}
+          <div class="empty-milestones">
+            <p>No milestones recorded yet.</p>
+            <p class="hint">Milestones are earned when your drives come into play during the story.</p>
+          </div>
+          {{/each}}
+        </div>
+      </div>
+
+      {{!-- Advancement Section --}}
+      <div class="advancement-section">
+        <div class="section-header">
+          <h3>Advancement</h3>
+          <p class="info-text">Spend milestones to improve your character.</p>
+        </div>
+
+        <div class="progression-options-list">
+          {{#each progressionOptions}}
+          <div class="progression-option {{#if (lt ../availableMilestoneCount cost)}}disabled{{/if}}" data-type="{{type}}">
+            <div class="progression-header">
+              <span class="progression-name">{{name}}</span>
+              <span class="progression-cost">Cost: {{cost}} milestones</span>
+            </div>
+            <div class="progression-description">{{description}}</div>
+          </div>
+          {{/each}}
+        </div>
+      </div>
+
+      {{!-- Progression Log --}}
+      {{#if progressionLog.length}}
+      <div class="progression-log-section">
+        <h4>Progression History</h4>
+        <div class="progression-log-list">
+          {{#each progressionLog}}
+          <div class="progression-log-item">
+            <span class="log-type">{{type}}</span>
+            <span class="log-target">{{target}}</span>
+            <span class="log-date">{{appliedAt}}</span>
+          </div>
+          {{/each}}
+        </div>
+      </div>
+      {{/if}}
+    </div>
+
+  </section>
+</form>

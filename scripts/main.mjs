@@ -1,0 +1,601 @@
+/**
+ * LANCER Far Field Sheets Module
+ * Adds Vessel and Character sheets for pilot actors in LANCER
+ *
+ * This module uses pilot actors with custom flags to store vessel/character data.
+ * Using pilot actors enables LANCER's native reserves system for tracking limited-use resources.
+ */
+
+import { VesselSheet } from "./vessel-sheet.mjs";
+import { CharacterSheet } from "./character-sheet.mjs";
+import { VESSEL_QUALITIES } from "./vessel-qualities.mjs";
+import { FAR_FIELD_SKILLS, FAR_FIELD_EDGES, getDefaultSkills } from "./character-data.mjs";
+
+// Module ID
+export const MODULE_ID = "lancer-far-field";
+
+// Flag keys
+export const FLAGS = {
+  isVessel: "isVessel",
+  vessel: "vessel",
+  isCharacter: "isCharacter",
+  character: "character"
+};
+
+/**
+ * Default vessel data structure
+ * Stored in actor flags instead of system data
+ */
+export function getDefaultVesselData() {
+  return {
+    class: "ranger",
+    description: "",
+    qualities: [],
+    crew: [],
+    hull: { value: 6, max: 6 },
+    supplies: { value: 4, max: 4 },
+    systemsStatus: "operational",
+    statusNotes: "",
+    missionLog: [],
+    sharedSupplies: []
+  };
+}
+
+/**
+ * Default character data structure
+ * Stored in actor flags instead of system data
+ */
+export function getDefaultCharacterData() {
+  return {
+    edges: [],
+    backgrounds: {
+      origin: null,
+      role: null,
+      discipline: null
+    },
+    skills: getDefaultSkills(),
+    aspects: [],
+    resources: [],
+    drives: [],
+    burdens: [],
+    milestones: [],
+    progressionLog: []
+  };
+}
+
+/**
+ * Hook: Initialize module
+ */
+Hooks.once("init", () => {
+  console.log(`${MODULE_ID} | Initializing LANCER Far Field Sheets`);
+
+  // Register the vessel sheet for pilot actors
+  Actors.registerSheet(MODULE_ID, VesselSheet, {
+    types: ["pilot"],
+    makeDefault: false,
+    label: "Ranger Vessel Sheet"
+  });
+
+  // Register the character sheet for pilot actors
+  Actors.registerSheet(MODULE_ID, CharacterSheet, {
+    types: ["pilot"],
+    makeDefault: false,
+    label: "Far Field Character Sheet"
+  });
+
+  // Store data in module config for easy access
+  game.modules.get(MODULE_ID).vesselQualities = VESSEL_QUALITIES;
+  game.modules.get(MODULE_ID).farFieldSkills = FAR_FIELD_SKILLS;
+  game.modules.get(MODULE_ID).farFieldEdges = FAR_FIELD_EDGES;
+
+  // Register Handlebars helpers
+  registerHandlebarsHelpers();
+
+  console.log(`${MODULE_ID} | Sheets registered for pilot actors`);
+});
+
+/**
+ * Register all Handlebars helpers
+ */
+function registerHandlebarsHelpers() {
+  // Vessel status class helper
+  Handlebars.registerHelper("vesselStatusClass", function(status) {
+    const classes = {
+      operational: "status-operational",
+      damaged: "status-damaged",
+      critical: "status-critical",
+      offline: "status-offline"
+    };
+    return classes[status] || "status-unknown";
+  });
+
+  // Vessel hull boxes helper
+  Handlebars.registerHelper("vesselHullBoxes", function(hull, options) {
+    if (!hull) return "";
+    let html = "";
+    for (let i = 1; i <= hull.max; i++) {
+      const filled = i <= (hull.max - hull.value) ? "filled" : "";
+      html += `<span class="hull-box ${filled}" data-index="${i}"></span>`;
+    }
+    return new Handlebars.SafeString(html);
+  });
+
+  // Vessel supply boxes helper
+  Handlebars.registerHelper("vesselSupplyBoxes", function(supplies, options) {
+    if (!supplies) return "";
+    let html = "";
+    for (let i = 1; i <= supplies.max; i++) {
+      const filled = i <= (supplies.max - supplies.value) ? "filled" : "";
+      html += `<span class="supply-box ${filled}" data-index="${i}"></span>`;
+    }
+    return new Handlebars.SafeString(html);
+  });
+
+  // Range helper for iterating numbers
+  Handlebars.registerHelper("range", function(start, end) {
+    const result = [];
+    for (let i = start; i <= end; i++) {
+      result.push(i);
+    }
+    return result;
+  });
+
+  // Comparison helpers
+  Handlebars.registerHelper("lte", function(a, b) {
+    return a <= b;
+  });
+
+  Handlebars.registerHelper("eq", function(a, b) {
+    return a === b;
+  });
+
+  Handlebars.registerHelper("gte", function(a, b) {
+    return a >= b;
+  });
+
+  Handlebars.registerHelper("gt", function(a, b) {
+    return a > b;
+  });
+
+  Handlebars.registerHelper("lt", function(a, b) {
+    return a < b;
+  });
+
+  // Array includes helper
+  Handlebars.registerHelper("includes", function(array, value) {
+    if (!Array.isArray(array)) return false;
+    return array.includes(value);
+  });
+
+  // Subtract helper
+  Handlebars.registerHelper("subtract", function(a, b) {
+    return a - b;
+  });
+
+  // Add helper
+  Handlebars.registerHelper("add", function(a, b) {
+    return a + b;
+  });
+}
+
+/**
+ * Hook: Ready - Module fully loaded
+ */
+Hooks.once("ready", () => {
+  console.log(`${MODULE_ID} | LANCER Far Field Sheets ready`);
+
+  // Make functions available globally for macros
+  const mod = game.modules.get(MODULE_ID);
+  mod.createVessel = createVessel;
+  mod.createCharacter = createCharacter;
+  mod.isVessel = isVessel;
+  mod.isCharacter = isCharacter;
+  mod.getVesselData = getVesselData;
+  mod.getCharacterData = getCharacterData;
+  mod.updateVesselData = updateVesselData;
+  mod.updateCharacterData = updateCharacterData;
+  mod.setFarFieldGear = setFarFieldGear;
+  mod.getFarFieldGearData = getFarFieldGearData;
+});
+
+/**
+ * Hook: Render Item Sheet
+ * Inject Far Field gear toggle into reserve/pilot gear item sheets
+ */
+Hooks.on("renderItemSheet", (app, html, data) => {
+  if (game.system.id !== "lancer") return;
+
+  const item = app.item;
+  if (!item) return;
+
+  // Only add to reserve and pilot gear items
+  const validTypes = ["reserve", "pilot_gear", "pilot_weapon", "pilot_armor"];
+  if (!validTypes.includes(item.type)) return;
+
+  // Check if Far Field toggle already exists
+  if (html.find(".far-field-gear-toggle").length) return;
+
+  // Get current Far Field gear state
+  const isFarFieldGear = item.getFlag(MODULE_ID, "isFarFieldGear") || false;
+  const track = item.getFlag(MODULE_ID, "track") || 4;
+
+  // Create the Far Field gear section
+  const farFieldSection = $(`
+    <div class="far-field-gear-section" style="
+      margin: 0.5rem 0;
+      padding: 0.75rem;
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      border-radius: 4px;
+    ">
+      <div class="far-field-gear-toggle" style="display: flex; align-items: center; gap: 0.5rem;">
+        <input type="checkbox" id="ff-gear-toggle-${item.id}"
+          ${isFarFieldGear ? "checked" : ""}
+          style="margin: 0;"
+        />
+        <label for="ff-gear-toggle-${item.id}" style="margin: 0; cursor: pointer;">
+          <strong>Far Field Gear</strong>
+        </label>
+      </div>
+      <p style="font-size: 0.85rem; color: #888; margin: 0.5rem 0 0 0;">
+        Enable track-based usage with mark/burn mechanics
+      </p>
+      ${isFarFieldGear ? `
+        <div class="far-field-track-config" style="margin-top: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+          <label for="ff-track-size-${item.id}" style="margin: 0;">Track Size:</label>
+          <input type="number" id="ff-track-size-${item.id}"
+            value="${track}" min="1" max="10"
+            style="width: 60px; padding: 0.25rem;"
+          />
+        </div>
+      ` : ""}
+    </div>
+  `);
+
+  // Find a good place to insert - after the header or at the start of the form
+  const header = html.find(".sheet-header");
+  if (header.length) {
+    header.after(farFieldSection);
+  } else {
+    html.find("form").prepend(farFieldSection);
+  }
+
+  // Add event listener for toggle
+  farFieldSection.find(`#ff-gear-toggle-${item.id}`).on("change", async (event) => {
+    const checked = event.currentTarget.checked;
+    await item.setFlag(MODULE_ID, "isFarFieldGear", checked);
+    if (checked) {
+      // Initialize track data if enabling
+      const currentTrack = item.getFlag(MODULE_ID, "track");
+      if (!currentTrack) {
+        await item.setFlag(MODULE_ID, "track", 4);
+        await item.setFlag(MODULE_ID, "marked", 0);
+        await item.setFlag(MODULE_ID, "burned", 0);
+      }
+    }
+    app.render(); // Re-render to show/hide track config
+  });
+
+  // Add event listener for track size
+  farFieldSection.find(`#ff-track-size-${item.id}`).on("change", async (event) => {
+    const newTrack = parseInt(event.currentTarget.value) || 4;
+    await item.setFlag(MODULE_ID, "track", Math.max(1, Math.min(10, newTrack)));
+  });
+});
+
+/**
+ * Set an item as Far Field gear with track configuration
+ */
+export async function setFarFieldGear(item, enabled, trackSize = 4) {
+  if (!item) return null;
+
+  await item.setFlag(MODULE_ID, "isFarFieldGear", enabled);
+  if (enabled) {
+    await item.setFlag(MODULE_ID, "track", trackSize);
+    await item.setFlag(MODULE_ID, "marked", 0);
+    await item.setFlag(MODULE_ID, "burned", 0);
+  }
+  return item;
+}
+
+/**
+ * Get Far Field gear data from an item
+ */
+export function getFarFieldGearData(item) {
+  if (!item) return null;
+
+  const isFarFieldGear = item.getFlag(MODULE_ID, "isFarFieldGear") || false;
+  if (!isFarFieldGear) return null;
+
+  return {
+    track: item.getFlag(MODULE_ID, "track") || 4,
+    marked: item.getFlag(MODULE_ID, "marked") || 0,
+    burned: item.getFlag(MODULE_ID, "burned") || 0
+  };
+}
+
+/**
+ * Hook: Render Actor Directory
+ * Add "Create Vessel" and "Create Character" buttons to the actor directory
+ */
+Hooks.on("renderActorDirectory", (app, html, data) => {
+  if (game.system.id !== "lancer") return;
+
+  // Find the header actions area
+  const headerActions = html.find(".header-actions");
+  if (!headerActions.length) return;
+
+  // Create the vessel button
+  const vesselButton = $(`
+    <button type="button" class="create-vessel-button" title="Create a new Ranger Vessel">
+      <i class="fas fa-rocket"></i> New Vessel
+    </button>
+  `);
+
+  // Create the character button
+  const characterButton = $(`
+    <button type="button" class="create-character-button" title="Create a new Far Field Character">
+      <i class="fas fa-user"></i> New Character
+    </button>
+  `);
+
+  // Add click handlers
+  vesselButton.on("click", async (event) => {
+    event.preventDefault();
+    await createVessel();
+  });
+
+  characterButton.on("click", async (event) => {
+    event.preventDefault();
+    await createCharacter();
+  });
+
+  // Insert after the create button or at the start
+  const createButton = headerActions.find(".create-document, .create-entry");
+  if (createButton.length) {
+    createButton.after(characterButton);
+    characterButton.after(vesselButton);
+  } else {
+    headerActions.prepend(vesselButton);
+    headerActions.prepend(characterButton);
+  }
+});
+
+/**
+ * Create a new vessel actor
+ * Creates a deployable with vessel flags
+ */
+async function createVessel(name = "New Vessel") {
+  const dialogContent = `
+    <form>
+      <div class="form-group">
+        <label>Vessel Name:</label>
+        <input type="text" name="name" value="${name}" autofocus/>
+      </div>
+    </form>
+  `;
+
+  return new Promise((resolve) => {
+    new Dialog({
+      title: "Create New Vessel",
+      content: dialogContent,
+      buttons: {
+        create: {
+          icon: '<i class="fas fa-rocket"></i>',
+          label: "Create",
+          callback: async (html) => {
+            const vesselName = html.find('[name="name"]').val() || name;
+
+            const actor = await Actor.create({
+              name: vesselName,
+              type: "pilot",
+              img: "modules/lancer-far-field/assets/vessel-icon.svg",
+              flags: {
+                [MODULE_ID]: {
+                  [FLAGS.isVessel]: true,
+                  [FLAGS.vessel]: getDefaultVesselData()
+                }
+              }
+            });
+
+            if (actor) {
+              actor.sheet.render(true);
+              ui.notifications.info(`Created vessel: ${vesselName}`);
+            }
+
+            resolve(actor);
+          }
+        },
+        cancel: {
+          icon: '<i class="fas fa-times"></i>',
+          label: "Cancel",
+          callback: () => resolve(null)
+        }
+      },
+      default: "create"
+    }).render(true);
+  });
+}
+
+/**
+ * Create a new character actor
+ * Creates a deployable with character flags
+ */
+async function createCharacter(name = "New Character") {
+  const dialogContent = `
+    <form>
+      <div class="form-group">
+        <label>Character Name:</label>
+        <input type="text" name="name" value="${name}" autofocus/>
+      </div>
+    </form>
+  `;
+
+  return new Promise((resolve) => {
+    new Dialog({
+      title: "Create New Far Field Character",
+      content: dialogContent,
+      buttons: {
+        create: {
+          icon: '<i class="fas fa-user"></i>',
+          label: "Create",
+          callback: async (html) => {
+            const characterName = html.find('[name="name"]').val() || name;
+
+            const actor = await Actor.create({
+              name: characterName,
+              type: "pilot",
+              img: "modules/lancer-far-field/assets/character-icon.svg",
+              flags: {
+                [MODULE_ID]: {
+                  [FLAGS.isCharacter]: true,
+                  [FLAGS.character]: getDefaultCharacterData()
+                }
+              }
+            });
+
+            if (actor) {
+              actor.sheet.render(true);
+              ui.notifications.info(`Created character: ${characterName}`);
+            }
+
+            resolve(actor);
+          }
+        },
+        cancel: {
+          icon: '<i class="fas fa-times"></i>',
+          label: "Cancel",
+          callback: () => resolve(null)
+        }
+      },
+      default: "create"
+    }).render(true);
+  });
+}
+
+/**
+ * Hook: Pre-create Actor
+ * Set default icon for vessels and characters
+ */
+Hooks.on("preCreateActor", (actor, data, options, userId) => {
+  const actorIsVessel = actor.getFlag(MODULE_ID, FLAGS.isVessel);
+  const actorIsCharacter = actor.getFlag(MODULE_ID, FLAGS.isCharacter);
+
+  if (actorIsVessel && !data.img) {
+    actor.updateSource({
+      img: "modules/lancer-far-field/assets/vessel-icon.svg"
+    });
+  }
+
+  if (actorIsCharacter && !data.img) {
+    actor.updateSource({
+      img: "modules/lancer-far-field/assets/character-icon.svg"
+    });
+  }
+});
+
+/**
+ * Utility: Check if an actor is a vessel
+ */
+export function isVessel(actor) {
+  return actor?.type === "pilot" && actor.getFlag(MODULE_ID, FLAGS.isVessel);
+}
+
+/**
+ * Utility: Check if an actor is a character
+ */
+export function isCharacter(actor) {
+  return actor?.type === "pilot" && actor.getFlag(MODULE_ID, FLAGS.isCharacter);
+}
+
+/**
+ * Utility: Get vessel data from an actor
+ */
+export function getVesselData(actor) {
+  if (!isVessel(actor)) return null;
+  return actor.getFlag(MODULE_ID, FLAGS.vessel) || getDefaultVesselData();
+}
+
+/**
+ * Utility: Get character data from an actor
+ */
+export function getCharacterData(actor) {
+  if (!isCharacter(actor)) return null;
+  return actor.getFlag(MODULE_ID, FLAGS.character) || getDefaultCharacterData();
+}
+
+/**
+ * Utility: Update vessel data on an actor
+ */
+export async function updateVesselData(actor, data) {
+  if (!isVessel(actor)) return null;
+  const currentData = getVesselData(actor);
+  const newData = foundry.utils.mergeObject(currentData, data);
+  return actor.setFlag(MODULE_ID, FLAGS.vessel, newData);
+}
+
+/**
+ * Utility: Update character data on an actor
+ */
+export async function updateCharacterData(actor, data) {
+  if (!isCharacter(actor)) return null;
+  const currentData = getCharacterData(actor);
+  const newData = foundry.utils.mergeObject(currentData, data);
+  return actor.setFlag(MODULE_ID, FLAGS.character, newData);
+}
+
+/**
+ * Import character data from web app JSON export
+ * Converts Vue app format to Foundry module format with null/blank handling
+ */
+export function importCharacterData(jsonData) {
+  // Parse if string
+  const data = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+
+  // Validate file type
+  if (data.type && data.type !== 'far-field-character') {
+    throw new Error('Invalid file type. Expected a Far Field character export.');
+  }
+
+  // Convert skills from array format to object format
+  // Vue: [{ id, name, rank, markedBoxes }]
+  // Foundry: { skillId: { rank, failures: [] } }
+  const skills = {};
+  if (Array.isArray(data.skills)) {
+    for (const skill of data.skills) {
+      if (skill?.id && typeof skill?.rank === 'number' && skill.rank > 0) {
+        // Convert markedBoxes (number) to failures (array of box indices)
+        const failures = [];
+        const markedBoxes = skill.markedBoxes || 0;
+        for (let i = 1; i <= markedBoxes; i++) {
+          failures.push(i);
+        }
+        skills[skill.id] = { rank: skill.rank, failures };
+      }
+    }
+  } else if (data.skills && typeof data.skills === 'object') {
+    // Already in object format (re-importing from Foundry export)
+    Object.assign(skills, data.skills);
+  }
+
+  // Build Foundry-compatible character data with safe defaults
+  return {
+    name: data.name || null,
+    edges: Array.isArray(data.edges) ? data.edges.filter(e => e) : [],
+    backgrounds: {
+      origin: data.backgrounds?.origin || null,
+      role: data.backgrounds?.role || null,
+      discipline: data.backgrounds?.discipline || null
+    },
+    skills,
+    aspects: Array.isArray(data.aspects) ? data.aspects.filter(a => a) : [],
+    resources: Array.isArray(data.resources) ? data.resources.filter(r => r) : [],
+    drives: Array.isArray(data.drives) ? data.drives.filter(d => d) : [],
+    burdens: Array.isArray(data.burdens) ? data.burdens.filter(b => b) : [],
+    milestones: Array.isArray(data.milestones) ? data.milestones.filter(m => m) : [],
+    progressionLog: Array.isArray(data.progressionLog) ? data.progressionLog : []
+  };
+}
+
+// Export for external use
+export { createVessel, createCharacter };

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="crate" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a4a6e"/>
+      <stop offset="100%" style="stop-color:#2a2a4e"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Crate body -->
+  <rect x="15" y="25" width="70" height="55" rx="3" fill="url(#crate)" stroke="#00ff88" stroke-width="2"/>
+
+  <!-- Crate lid -->
+  <rect x="10" y="18" width="80" height="12" rx="2" fill="#3a3a5e" stroke="#00ff88" stroke-width="2"/>
+
+  <!-- Horizontal straps -->
+  <rect x="15" y="40" width="70" height="4" fill="#ff6b35"/>
+  <rect x="15" y="60" width="70" height="4" fill="#ff6b35"/>
+
+  <!-- Vertical strap -->
+  <rect x="45" y="25" width="10" height="55" fill="#ff6b35" opacity="0.7"/>
+
+  <!-- Supply indicator boxes -->
+  <rect x="22" y="47" width="8" height="8" fill="#00ff88" stroke="#00cc6a" stroke-width="1"/>
+  <rect x="34" y="47" width="8" height="8" fill="#00ff88" stroke="#00cc6a" stroke-width="1"/>
+  <rect x="46" y="47" width="8" height="8" fill="transparent" stroke="#00cc6a" stroke-width="1"/>
+  <rect x="58" y="47" width="8" height="8" fill="transparent" stroke="#00cc6a" stroke-width="1"/>
+  <rect x="70" y="47" width="8" height="8" fill="transparent" stroke="#00cc6a" stroke-width="1"/>
+</svg>
