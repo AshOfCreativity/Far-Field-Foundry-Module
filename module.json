@@ -38,5 +38,6 @@
   ],
   "socket": false,
   "url": "https://github.com/AshOfCreativity/Far-Field-Foundry-Module",
-  "manifest": "https://raw.githubusercontent.com/AshOfCreativity/Far-Field-Foundry-Module/main/module.json"
+  "manifest": "https://raw.githubusercontent.com/AshOfCreativity/Far-Field-Foundry-Module/main/module.json",
+  "download": "https://github.com/AshOfCreativity/Far-Field-Foundry-Module/archive/refs/heads/main.zip"
 }
