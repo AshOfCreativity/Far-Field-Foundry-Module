@@ -134,6 +134,74 @@
             </div>
           </div>
         </div>
+
+        {{!-- My Vessel Section --}}
+        <div class="section vessel-overview">
+          <h3><i class="fas fa-rocket"></i> My Vessel</h3>
+          {{#if assignedVessels.length}}
+          {{#each assignedVessels}}
+          <div class="my-vessel-card" data-vessel-id="{{id}}">
+            <div class="vessel-card-header">
+              <img src="{{img}}" class="vessel-portrait" width="48" height="48"/>
+              <div class="vessel-card-info">
+                <span class="vessel-card-name">{{name}}</span>
+                <span class="vessel-card-role">{{role}} · {{class}}</span>
+              </div>
+              <button type="button" class="open-vessel" data-vessel-id="{{id}}" title="Open Vessel Sheet">
+                <i class="fas fa-external-link-alt"></i>
+              </button>
+            </div>
+            <div class="vessel-card-status">
+              <span class="vessel-stat">
+                <i class="fas fa-heart"></i> Hull: {{hull.value}}/{{hull.max}}
+              </span>
+              <span class="vessel-stat">
+                <i class="fas fa-box"></i> Supplies: {{supplies.value}}/{{supplies.max}}
+              </span>
+              <span class="vessel-stat systems-{{systemsStatus}}">
+                <i class="fas fa-cog"></i> {{systemsStatus}}
+              </span>
+            </div>
+            {{#if sharedSupplies.length}}
+            <div class="vessel-shared-supplies">
+              <h4>Shared Supplies</h4>
+              <div class="vessel-supplies-list">
+                {{#each sharedSupplies}}
+                <div class="vessel-supply-item" data-vessel-id="{{../id}}" data-supply-id="{{id}}">
+                  <div class="vessel-supply-header">
+                    <span class="vessel-supply-name">{{name}}</span>
+                    <span class="vessel-supply-status">
+                      {{#if (eq available 0)}}
+                      <span class="exhausted">EXHAUSTED</span>
+                      {{else}}
+                      {{available}}/{{track}}
+                      {{/if}}
+                    </span>
+                  </div>
+                  <div class="vessel-supply-track">
+                    {{#each (range 1 track)}}
+                    <span class="vessel-shared-supply-box
+                      {{#if (lte this ../marked)}}marked{{/if}}
+                      {{#if (lte this ../burned)}}burned{{/if}}"
+                      data-box="{{this}}"
+                      title="Left-click: mark, Right-click: burn">
+                    </span>
+                    {{/each}}
+                  </div>
+                </div>
+                {{/each}}
+              </div>
+            </div>
+            {{/if}}
+          </div>
+          {{/each}}
+          {{else}}
+          <div class="no-vessel-assigned">
+            <p><i class="fas fa-info-circle"></i> Not assigned to any vessel.</p>
+            <p class="hint">Ask your GM to add you to a vessel's crew roster.</p>
+          </div>
+          {{/if}}
+        </div>
       </div>
     </div>
 

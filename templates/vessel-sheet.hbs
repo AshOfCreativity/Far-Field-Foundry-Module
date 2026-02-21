@@ -115,6 +115,29 @@
           <p class="empty-notice">No crew assigned. Go to the Crew tab or drag pilots here.</p>
           {{/if}}
         </div>
+
+        {{!-- Shared Supplies Summary --}}
+        <div class="section shared-supplies-summary">
+          <h3>Shared Supplies ({{sharedSupplies.length}})</h3>
+          {{#if sharedSupplies.length}}
+          <ul class="shared-supplies-list-mini">
+            {{#each sharedSupplies}}
+            <li class="shared-supply-mini {{#if (eq available 0)}}exhausted{{/if}}">
+              <span class="supply-name-mini">{{name}}</span>
+              <span class="supply-status-mini">
+                {{#if (eq available 0)}}
+                  <span class="status-exhausted">EXHAUSTED</span>
+                {{else}}
+                  {{available}}/{{track}} available
+                {{/if}}
+              </span>
+            </li>
+            {{/each}}
+          </ul>
+          {{else}}
+          <p class="empty-notice">No shared supplies. Go to the Cargo tab to add them.</p>
+          {{/if}}
+        </div>
       </div>
     </div>
 
@@ -297,11 +320,71 @@
     <div class="tab cargo" data-group="primary" data-tab="cargo">
       <div class="cargo-section">
         <h3>Ship Cargo & Reserves</h3>
-        <p class="info-text">Drag reserves from the LANCER compendium. For Far Field gear with track/burn mechanics, open the item and enable "Far Field Gear".</p>
+        <p class="info-text">Manage party supplies and gear. Shared supplies are available to all crew members.</p>
+
+        {{!-- Shared Party Supplies --}}
+        <div class="cargo-subsection shared-supplies-subsection">
+          <div class="subsection-header">
+            <h4><i class="fas fa-boxes"></i> Shared Party Supplies</h4>
+            {{#if editable}}
+            <button type="button" class="add-shared-supply">
+              <i class="fas fa-plus"></i> Add Supply
+            </button>
+            {{/if}}
+          </div>
+          <p class="track-info">Left-click to mark (use), right-click to burn (permanently deplete). Click reset to clear marks.</p>
+
+          <div class="shared-supplies-list">
+            {{#each sharedSupplies}}
+            <div class="shared-supply-item" data-supply-id="{{id}}">
+              <div class="shared-supply-header">
+                <span class="shared-supply-name">{{name}}</span>
+                <span class="supply-type-badge {{type}}">{{type}}</span>
+                {{#if ../editable}}
+                <button type="button" class="reset-shared-supply" data-supply-id="{{id}}" title="Reset marks">
+                  <i class="fas fa-undo"></i>
+                </button>
+                <button type="button" class="remove-shared-supply" data-supply-id="{{id}}" title="Remove">
+                  <i class="fas fa-trash"></i>
+                </button>
+                {{/if}}
+              </div>
+              {{#if description}}
+              <p class="shared-supply-description">{{description}}</p>
+              {{/if}}
+              <div class="shared-supply-track-container">
+                <div class="shared-supply-track">
+                  {{#each (range 1 track)}}
+                  <span class="shared-supply-track-box
+                    {{#if (lte this ../marked)}}marked{{/if}}
+                    {{#if (lte this ../burned)}}burned{{/if}}"
+                    data-box="{{this}}"
+                    title="Left-click: mark, Right-click: burn">
+                  </span>
+                  {{/each}}
+                </div>
+                <span class="shared-supply-status">
+                  {{marked}}/{{track}} used
+                  {{#if burned}}({{burned}} depleted){{/if}}
+                  {{#if (eq available 0)}}<span class="exhausted-label">EXHAUSTED</span>{{/if}}
+                </span>
+              </div>
+            </div>
+            {{else}}
+            <div class="empty-shared-supplies">
+              <p>No shared supplies configured.</p>
+              <p class="hint">Add supplies that the entire party can access and track together.</p>
+            </div>
+            {{/each}}
+          </div>
+        </div>
+
+        <hr class="cargo-divider"/>
 
         {{!-- LANCER Reserves (native items) --}}
         <div class="cargo-subsection reserves-subsection">
-          <h4>Reserves & Gear</h4>
+          <h4><i class="fas fa-box-open"></i> Reserves & Gear</h4>
+          <p class="track-info">Drag reserves from the LANCER compendium. Enable "Far Field Gear" on items for track mechanics.</p>
           <div class="reserves-list item-list">
             {{#each reserves}}
             <div class="reserve-item cargo-item {{#if used}}used{{/if}} {{#if isFarFieldGear}}far-field-gear{{/if}}" data-item-id="{{id}}">

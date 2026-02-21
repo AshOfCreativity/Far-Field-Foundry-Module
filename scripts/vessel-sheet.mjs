@@ -130,6 +130,12 @@ export class VesselSheet extends ActorSheet {
     // Mission log sorted by timestamp (newest first)
     context.missionLog = [...(vesselData.missionLog || [])].sort((a, b) => b.timestamp - a.timestamp);
 
+    // Shared supplies for party management
+    context.sharedSupplies = (vesselData.sharedSupplies || []).map(supply => ({
+      ...supply,
+      available: supply.track - supply.burned
+    }));
+
     // Get actor's items - specifically reserves (LANCER native items)
     // Filter for reserve-type items that can be used/tracked
     context.reserves = this.actor.items.filter(i =>
@@ -245,6 +251,13 @@ export class VesselSheet extends ActorSheet {
     // Far Field gear track management
     html.find(".ff-track-box").click(this._onMarkFarFieldBox.bind(this));
     html.find(".ff-track-box").contextmenu(this._onBurnFarFieldBox.bind(this));
+
+    // Shared supply management
+    html.find(".add-shared-supply").click(this._onAddSharedSupply.bind(this));
+    html.find(".remove-shared-supply").click(this._onRemoveSharedSupply.bind(this));
+    html.find(".shared-supply-track-box").click(this._onMarkSharedSupplyBox.bind(this));
+    html.find(".shared-supply-track-box").contextmenu(this._onBurnSharedSupplyBox.bind(this));
+    html.find(".reset-shared-supply").click(this._onResetSharedSupply.bind(this));
   }
 
   /**
@@ -756,5 +769,183 @@ export class VesselSheet extends ActorSheet {
     if (currentMarked < newBurned) {
       await item.setFlag("Far-Field-Foundry-Module-main", "marked", newBurned);
     }
+  }
+
+  /**
+   * Add a new shared supply
+   */
+  async _onAddSharedSupply(event) {
+    event.preventDefault();
+
+    const content = `
+      <form>
+        <div class="form-group">
+          <label>Supply Name:</label>
+          <input type="text" name="name" placeholder="e.g., Emergency Rations"/>
+        </div>
+        <div class="form-group">
+          <label>Type:</label>
+          <select name="type">
+            <option value="Supply">Supply</option>
+            <option value="Equipment">Equipment</option>
+            <option value="Consumable">Consumable</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Track Size:</label>
+          <input type="number" name="track" value="4" min="1" max="10"/>
+        </div>
+        <div class="form-group">
+          <label>Description (optional):</label>
+          <textarea name="description" rows="2" placeholder="Notes about this supply..."></textarea>
+        </div>
+      </form>
+    `;
+
+    new Dialog({
+      title: "Add Shared Supply",
+      content,
+      buttons: {
+        create: {
+          icon: '<i class="fas fa-plus"></i>',
+          label: "Add",
+          callback: async (html) => {
+            const name = html.find('[name="name"]').val()?.trim();
+            const type = html.find('[name="type"]').val();
+            const track = parseInt(html.find('[name="track"]').val()) || 4;
+            const description = html.find('[name="description"]').val()?.trim();
+
+            if (!name) {
+              ui.notifications.warn("Please enter a supply name.");
+              return;
+            }
+
+            const sharedSupplies = [...(this.vesselData.sharedSupplies || [])];
+            sharedSupplies.push({
+              id: foundry.utils.randomID(),
+              name,
+              type,
+              track: Math.max(1, Math.min(10, track)),
+              marked: 0,
+              burned: 0,
+              description: description || ""
+            });
+
+            await this.updateVesselData({ sharedSupplies });
+            ui.notifications.info(`Added shared supply: ${name}`);
+          }
+        },
+        cancel: {
+          icon: '<i class="fas fa-times"></i>',
+          label: "Cancel"
+        }
+      },
+      default: "create"
+    }).render(true);
+  }
+
+  /**
+   * Remove a shared supply
+   */
+  async _onRemoveSharedSupply(event) {
+    event.preventDefault();
+    const supplyId = event.currentTarget.dataset.supplyId;
+
+    const supply = this.vesselData.sharedSupplies.find(s => s.id === supplyId);
+    if (!supply) return;
+
+    const confirmed = await Dialog.confirm({
+      title: "Remove Shared Supply",
+      content: `<p>Are you sure you want to remove "${supply.name}"?</p>`,
+      yes: () => true,
+      no: () => false
+    });
+
+    if (confirmed) {
+      const sharedSupplies = this.vesselData.sharedSupplies.filter(s => s.id !== supplyId);
+      await this.updateVesselData({ sharedSupplies });
+    }
+  }
+
+  /**
+   * Mark a shared supply track box (left-click)
+   */
+  async _onMarkSharedSupplyBox(event) {
+    event.preventDefault();
+    const box = event.currentTarget;
+    const supplyId = box.closest(".shared-supply-item")?.dataset.supplyId;
+    const boxIndex = parseInt(box.dataset.box);
+
+    if (!supplyId || isNaN(boxIndex)) return;
+
+    const sharedSupplies = [...(this.vesselData.sharedSupplies || [])];
+    const supply = sharedSupplies.find(s => s.id === supplyId);
+    if (!supply) return;
+
+    // Can't mark burned boxes
+    if (boxIndex <= supply.burned) return;
+
+    // Toggle: if clicking at or below current mark, reduce; otherwise increase
+    if (boxIndex <= supply.marked) {
+      supply.marked = boxIndex - 1;
+    } else {
+      supply.marked = boxIndex;
+    }
+
+    // Ensure marked is at least equal to burned
+    supply.marked = Math.max(supply.marked, supply.burned);
+
+    await this.updateVesselData({ sharedSupplies });
+  }
+
+  /**
+   * Burn a shared supply track box (right-click)
+   */
+  async _onBurnSharedSupplyBox(event) {
+    event.preventDefault();
+    const box = event.currentTarget;
+    const supplyId = box.closest(".shared-supply-item")?.dataset.supplyId;
+    const boxIndex = parseInt(box.dataset.box);
+
+    if (!supplyId || isNaN(boxIndex)) return;
+
+    const sharedSupplies = [...(this.vesselData.sharedSupplies || [])];
+    const supply = sharedSupplies.find(s => s.id === supplyId);
+    if (!supply) return;
+
+    // Toggle: if clicking at or below current burn, reduce; otherwise increase
+    if (boxIndex <= supply.burned) {
+      supply.burned = boxIndex - 1;
+    } else {
+      supply.burned = boxIndex;
+    }
+
+    // Clamp to valid range
+    supply.burned = Math.max(0, Math.min(supply.burned, supply.track));
+
+    // Ensure marked is at least equal to burned
+    if (supply.marked < supply.burned) {
+      supply.marked = supply.burned;
+    }
+
+    await this.updateVesselData({ sharedSupplies });
+  }
+
+  /**
+   * Reset a shared supply (clear all marks, keep burns)
+   */
+  async _onResetSharedSupply(event) {
+    event.preventDefault();
+    const supplyId = event.currentTarget.dataset.supplyId;
+
+    const sharedSupplies = [...(this.vesselData.sharedSupplies || [])];
+    const supply = sharedSupplies.find(s => s.id === supplyId);
+    if (!supply) return;
+
+    // Reset marked to equal burned (clear temporary uses)
+    supply.marked = supply.burned;
+
+    await this.updateVesselData({ sharedSupplies });
+    ui.notifications.info(`Reset ${supply.name}`);
   }
 }

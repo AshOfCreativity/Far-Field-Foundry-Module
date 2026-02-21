@@ -3,7 +3,7 @@
  * Character sheet for tracking Far Field rangers with edges, backgrounds, skills, aspects, and progression
  */
 
-import { MODULE_ID, FLAGS, getDefaultCharacterData, importCharacterData } from "./main.mjs";
+import { MODULE_ID, FLAGS, getDefaultCharacterData, importCharacterData, isVessel, getVesselData } from "./main.mjs";
 import {
   FAR_FIELD_SKILLS,
   FAR_FIELD_EDGES,
@@ -40,6 +40,41 @@ export class CharacterSheet extends ActorSheet {
   /** @override */
   get template() {
     return "modules/Far-Field-Foundry-Module-main/templates/character-sheet.hbs";
+  }
+
+  /** @override */
+  async _render(force, options) {
+    await super._render(force, options);
+
+    // Register hook to listen for vessel updates (only once)
+    if (!this._vesselUpdateHook) {
+      this._vesselUpdateHook = Hooks.on("updateActor", this._onVesselUpdate.bind(this));
+    }
+  }
+
+  /** @override */
+  async close(options) {
+    // Clean up hook when sheet closes
+    if (this._vesselUpdateHook) {
+      Hooks.off("updateActor", this._vesselUpdateHook);
+      this._vesselUpdateHook = null;
+    }
+    return super.close(options);
+  }
+
+  /**
+   * Re-render when a linked vessel updates
+   */
+  _onVesselUpdate(actor, changes, options, userId) {
+    if (actor.id === this.actor.id) return;
+    if (!isVessel(actor)) return;
+
+    // Check if we're crew on this vessel
+    const vesselData = getVesselData(actor);
+    const isInCrew = vesselData?.crew?.some(c => c.pilotId === this.actor.id);
+    if (isInCrew) {
+      this.render(false); // Soft re-render
+    }
   }
 
   /**
@@ -134,11 +169,53 @@ export class CharacterSheet extends ActorSheet {
     context.progressionOptions = PROGRESSION_OPTIONS;
     context.progressionLog = charData.progressionLog || [];
 
+    // Find vessels this character is assigned to
+    context.assignedVessels = this._findAssignedVessels();
+
     // Editable state
     context.editable = this.isEditable;
     context.owner = this.actor.isOwner;
 
     return context;
+  }
+
+  /**
+   * Find all vessels where this character is listed as crew
+   * @returns {Array} Array of vessel data with shared supplies
+   */
+  _findAssignedVessels() {
+    const vessels = [];
+    const myActorId = this.actor.id;
+
+    // Search all actors for vessels that have this character in crew
+    for (const actor of game.actors) {
+      if (!isVessel(actor)) continue;
+
+      const vesselData = getVesselData(actor);
+      if (!vesselData?.crew) continue;
+
+      // Check if this character is in the crew
+      const crewMember = vesselData.crew.find(c => c.pilotId === myActorId);
+      if (!crewMember) continue;
+
+      // Found a vessel - add it with relevant data
+      vessels.push({
+        id: actor.id,
+        name: actor.name,
+        img: actor.img,
+        role: crewMember.role || "Crew",
+        class: vesselData.class || "ranger",
+        hull: vesselData.hull,
+        supplies: vesselData.supplies,
+        systemsStatus: vesselData.systemsStatus,
+        sharedSupplies: (vesselData.sharedSupplies || []).map(supply => ({
+          ...supply,
+          available: supply.track - supply.burned
+        }))
+      });
+    }
+
+    return vessels;
   }
 
   /** @override */
@@ -203,6 +280,11 @@ export class CharacterSheet extends ActorSheet {
 
     // Import character
     html.find(".import-character").click(this._onImportCharacter.bind(this));
+
+    // Vessel interactions
+    html.find(".open-vessel").click(this._onOpenVessel.bind(this));
+    html.find(".vessel-shared-supply-box").click(this._onMarkVesselSupplyBox.bind(this));
+    html.find(".vessel-shared-supply-box").contextmenu(this._onBurnVesselSupplyBox.bind(this));
   }
 
   /**
@@ -1396,5 +1478,99 @@ export class CharacterSheet extends ActorSheet {
     };
 
     input.click();
+  }
+
+  /**
+   * Open a linked vessel's sheet
+   */
+  _onOpenVessel(event) {
+    event.preventDefault();
+    const vesselId = event.currentTarget.dataset.vesselId;
+    const vessel = game.actors.get(vesselId);
+    if (vessel) {
+      vessel.sheet.render(true);
+    }
+  }
+
+  /**
+   * Mark a vessel's shared supply track box (left-click)
+   * Updates the vessel's data directly
+   */
+  async _onMarkVesselSupplyBox(event) {
+    event.preventDefault();
+    const box = event.currentTarget;
+    const vesselId = box.closest(".vessel-supply-item")?.dataset.vesselId;
+    const supplyId = box.closest(".vessel-supply-item")?.dataset.supplyId;
+    const boxIndex = parseInt(box.dataset.box);
+
+    if (!vesselId || !supplyId || isNaN(boxIndex)) return;
+
+    const vessel = game.actors.get(vesselId);
+    if (!vessel || !isVessel(vessel)) return;
+
+    const vesselData = getVesselData(vessel);
+    const sharedSupplies = [...(vesselData.sharedSupplies || [])];
+    const supply = sharedSupplies.find(s => s.id === supplyId);
+    if (!supply) return;
+
+    // Can't mark burned boxes
+    if (boxIndex <= supply.burned) return;
+
+    // Toggle: if clicking at or below current mark, reduce; otherwise increase
+    if (boxIndex <= supply.marked) {
+      supply.marked = boxIndex - 1;
+    } else {
+      supply.marked = boxIndex;
+    }
+
+    // Ensure marked is at least equal to burned
+    supply.marked = Math.max(supply.marked, supply.burned);
+
+    // Update the vessel
+    const currentData = vesselData;
+    const newData = foundry.utils.mergeObject(currentData, { sharedSupplies }, { inplace: false });
+    await vessel.setFlag(MODULE_ID, FLAGS.vessel, newData);
+  }
+
+  /**
+   * Burn a vessel's shared supply track box (right-click)
+   * Updates the vessel's data directly
+   */
+  async _onBurnVesselSupplyBox(event) {
+    event.preventDefault();
+    const box = event.currentTarget;
+    const vesselId = box.closest(".vessel-supply-item")?.dataset.vesselId;
+    const supplyId = box.closest(".vessel-supply-item")?.dataset.supplyId;
+    const boxIndex = parseInt(box.dataset.box);
+
+    if (!vesselId || !supplyId || isNaN(boxIndex)) return;
+
+    const vessel = game.actors.get(vesselId);
+    if (!vessel || !isVessel(vessel)) return;
+
+    const vesselData = getVesselData(vessel);
+    const sharedSupplies = [...(vesselData.sharedSupplies || [])];
+    const supply = sharedSupplies.find(s => s.id === supplyId);
+    if (!supply) return;
+
+    // Toggle: if clicking at or below current burn, reduce; otherwise increase
+    if (boxIndex <= supply.burned) {
+      supply.burned = boxIndex - 1;
+    } else {
+      supply.burned = boxIndex;
+    }
+
+    // Clamp to valid range
+    supply.burned = Math.max(0, Math.min(supply.burned, supply.track));
+
+    // Ensure marked is at least equal to burned
+    if (supply.marked < supply.burned) {
+      supply.marked = supply.burned;
+    }
+
+    // Update the vessel
+    const currentData = vesselData;
+    const newData = foundry.utils.mergeObject(currentData, { sharedSupplies }, { inplace: false });
+    await vessel.setFlag(MODULE_ID, FLAGS.vessel, newData);
   }
 }
