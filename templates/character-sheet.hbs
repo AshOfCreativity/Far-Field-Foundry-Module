@@ -218,6 +218,7 @@
         <div class="edge-card {{#if (includes ../selectedEdgeIds this.id)}}selected{{/if}}" data-edge-id="{{id}}">
           <div class="edge-header">
             <h4 class="edge-name">{{name}}</h4>
+            <a class="chat-feature" data-feature-type="edge" data-feature-id="{{id}}" title="Send to chat"><i class="fas fa-comment-alt"></i></a>
             <span class="edge-indicator">
               {{#if (includes ../selectedEdgeIds this.id)}}
               <i class="fas fa-check-circle"></i>
@@ -251,6 +252,7 @@
             {{/each}}
           </select>
           {{#if selectedOrigin}}
+          <a class="chat-feature" data-feature-type="background" data-feature-id="origin" title="Send to chat"><i class="fas fa-comment-alt"></i></a>
           <div class="bg-description">{{selectedOrigin.description}}</div>
           {{/if}}
         </div>
@@ -266,6 +268,7 @@
             {{/each}}
           </select>
           {{#if selectedRole}}
+          <a class="chat-feature" data-feature-type="background" data-feature-id="role" title="Send to chat"><i class="fas fa-comment-alt"></i></a>
           <div class="bg-description">{{selectedRole.description}}</div>
           {{/if}}
         </div>
@@ -281,6 +284,7 @@
             {{/each}}
           </select>
           {{#if selectedDiscipline}}
+          <a class="chat-feature" data-feature-type="background" data-feature-id="discipline" title="Send to chat"><i class="fas fa-comment-alt"></i></a>
           <div class="bg-description">{{selectedDiscipline.description}}</div>
           {{/if}}
         </div>
@@ -301,6 +305,7 @@
             <span class="skill-name">{{name}}</span>
             <span class="skill-desc">{{description}}</span>
           </div>
+          <a class="chat-feature" data-feature-type="skill" data-feature-id="{{id}}" title="Send to chat"><i class="fas fa-comment-alt"></i></a>
           <div class="skill-rank">
             {{#each (range 1 3)}}
             <span class="skill-rank-pip {{#if (lte this ../rank)}}filled{{/if}}"
@@ -352,6 +357,7 @@
               <span class="aspect-name">{{name}}</span>
               <span class="aspect-type-badge {{type}}">{{type}}</span>
               <span class="aspect-source {{#if (eq source 'custom')}}custom{{/if}}">{{sourceName}}</span>
+              <a class="chat-feature" data-feature-type="aspect" data-feature-id="{{id}}" title="Send to chat"><i class="fas fa-comment-alt"></i></a>
               {{#if ../editable}}
               <button type="button" class="remove-aspect" data-aspect-id="{{id}}" title="Remove">
                 <i class="fas fa-trash"></i>
@@ -422,6 +428,7 @@
           <div class="resource-header">
             <span class="resource-type-badge {{type}}">{{type}}</span>
             <span class="resource-name">{{name}}</span>
+            <a class="chat-feature" data-feature-type="resource" data-feature-id="{{id}}" title="Send to chat"><i class="fas fa-comment-alt"></i></a>
             {{#if ../editable}}
             <button type="button" class="remove-resource" data-resource-id="{{id}}" title="Remove">
               <i class="fas fa-trash"></i>
@@ -468,6 +475,7 @@
           <div class="drive-item" data-drive-id="{{id}}">
             <div class="drive-header">
               <input type="text" name="drive.{{id}}.name" value="{{name}}" placeholder="Drive name..." {{#unless ../editable}}disabled{{/unless}}/>
+              <a class="chat-feature" data-feature-type="drive" data-feature-id="{{id}}" title="Send to chat"><i class="fas fa-comment-alt"></i></a>
               {{#if ../editable}}
               <button type="button" class="remove-drive" data-drive-id="{{id}}" title="Remove">
                 <i class="fas fa-trash"></i>
@@ -502,6 +510,7 @@
           <div class="burden-item" data-burden-id="{{id}}">
             <div class="burden-header">
               <span class="burden-name">{{name}}</span>
+              <a class="chat-feature" data-feature-type="burden" data-feature-id="{{id}}" title="Send to chat"><i class="fas fa-comment-alt"></i></a>
               {{#if ../editable}}
               <button type="button" class="remove-burden" data-burden-id="{{id}}" title="Remove">
                 <i class="fas fa-trash"></i>

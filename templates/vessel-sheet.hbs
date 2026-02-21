@@ -163,6 +163,7 @@
         <div class="quality-item" data-quality-id="{{id}}">
           <div class="quality-header">
             <h4 class="quality-name">{{name}}</h4>
+            <a class="chat-feature" data-feature-type="quality" data-feature-id="{{id}}" title="Send to chat"><i class="fas fa-comment-alt"></i></a>
             {{#if ../editable}}
             <button type="button" class="remove-quality" data-quality-id="{{id}}" title="Remove Quality">
               <i class="fas fa-trash"></i>
@@ -340,6 +341,7 @@
               <div class="shared-supply-header">
                 <span class="shared-supply-name">{{name}}</span>
                 <span class="supply-type-badge {{type}}">{{type}}</span>
+                <a class="chat-feature" data-feature-type="shared-supply" data-feature-id="{{id}}" title="Send to chat"><i class="fas fa-comment-alt"></i></a>
                 {{#if ../editable}}
                 <button type="button" class="reset-shared-supply" data-supply-id="{{id}}" title="Reset marks">
                   <i class="fas fa-undo"></i>
@@ -411,6 +413,7 @@
                 {{/if}}
               </div>
               <div class="reserve-controls">
+                <a class="chat-feature reserve-control" data-feature-type="reserve" data-feature-id="{{id}}" title="Send to chat"><i class="fas fa-comment-alt"></i></a>
                 {{#if ../editable}}
                 {{!-- Only show used toggle for non-Far Field gear --}}
                 {{#unless isFarFieldGear}}

@@ -3077,3 +3077,130 @@
 .character-sheet ::-webkit-scrollbar-thumb:hover {
   background: var(--char-accent);
 }
+
+/* ===================== */
+/* Chat Feature Buttons  */
+/* ===================== */
+.chat-feature {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 0.7rem;
+  color: inherit;
+  opacity: 0.3;
+  cursor: pointer;
+  transition: opacity 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.chat-feature:hover {
+  opacity: 1;
+  color: var(--vessel-info, #00d4ff);
+}
+
+.character-sheet .chat-feature:hover {
+  color: var(--char-accent, #ffd700);
+}
+
+/* ===================== */
+/* Chat Cards in Foundry */
+/* ===================== */
+.ff-chat-card {
+  background: #1a1a2e;
+  border: 1px solid #3a3a5e;
+  border-left: 3px solid #00d4ff;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font-family: inherit;
+  color: #e0e0e0;
+}
+
+.ff-chat-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.ff-chat-title {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #fff;
+}
+
+.ff-chat-subtitle {
+  font-size: 0.75rem;
+  color: #8a8a9a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ff-chat-tags {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.35rem;
+}
+
+.ff-chat-tag {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  background: #252540;
+  border: 1px solid #3a3a5e;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  color: #aaa;
+}
+
+.ff-chat-description {
+  font-size: 0.85rem;
+  color: #ccc;
+  line-height: 1.4;
+  margin-bottom: 0.35rem;
+}
+
+.ff-chat-track {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-top: 0.25rem;
+}
+
+.ff-chat-box {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid #555;
+  border-radius: 2px;
+  background: transparent;
+}
+
+.ff-chat-box.marked {
+  background: #00d4ff;
+  border-color: #00d4ff;
+}
+
+.ff-chat-box.burned {
+  background: #ff3366;
+  border-color: #ff3366;
+  position: relative;
+}
+
+.ff-chat-box.burned::after {
+  content: "\00d7";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.7rem;
+  color: #fff;
+  line-height: 1;
+}
+
+.ff-chat-track-label {
+  font-size: 0.7rem;
+  color: #8a8a9a;
+  margin-left: 0.3rem;
+}

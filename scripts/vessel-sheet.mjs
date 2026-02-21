@@ -8,6 +8,7 @@
 
 import { VESSEL_QUALITIES } from "./vessel-qualities.mjs";
 import { MODULE_ID, FLAGS, getDefaultVesselData } from "./main.mjs";
+import { postFeatureToChat } from "./chat.mjs";
 
 export class VesselSheet extends ActorSheet {
 
@@ -192,6 +193,9 @@ export class VesselSheet extends ActorSheet {
   /** @override */
   activateListeners(html) {
     super.activateListeners(html);
+
+    // Chat feature buttons work for all viewers
+    html.find(".chat-feature").click(this._onChatFeature.bind(this));
 
     // Everything below here is only needed if the sheet is editable
     if (!this.isEditable) return;
@@ -645,6 +649,65 @@ export class VesselSheet extends ActorSheet {
         }
       });
     }
+  }
+
+  /**
+   * Handle chat feature button click
+   */
+  async _onChatFeature(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const el = event.currentTarget;
+    const type = el.dataset.featureType;
+    const id = el.dataset.featureId;
+    const vesselData = this.vesselData;
+
+    let data;
+    switch (type) {
+      case "quality": {
+        const quality = (vesselData.qualities || []).find(q => q.id === id);
+        if (!quality) return;
+        data = { title: quality.name, subtitle: "Vessel Quality", description: quality.description };
+        break;
+      }
+      case "shared-supply": {
+        const supply = (vesselData.sharedSupplies || []).find(s => s.id === id);
+        if (!supply) return;
+        data = {
+          title: supply.name, subtitle: "Shared Supply",
+          description: supply.description || "",
+          tags: [supply.type].filter(Boolean),
+          track: { total: supply.track, marked: supply.marked, burned: supply.burned }
+        };
+        break;
+      }
+      case "reserve": {
+        const item = this.actor.items.get(id);
+        if (!item) return;
+        const isFarFieldGear = item.getFlag("Far-Field-Foundry-Module-main", "isFarFieldGear") || false;
+        const tags = [item.type];
+        if (isFarFieldGear) tags.push("Far Field Gear");
+        if (item.system?.used) tags.push("Used");
+        let track = null;
+        if (isFarFieldGear) {
+          track = {
+            total: item.getFlag("Far-Field-Foundry-Module-main", "track") || 4,
+            marked: item.getFlag("Far-Field-Foundry-Module-main", "marked") || 0,
+            burned: item.getFlag("Far-Field-Foundry-Module-main", "burned") || 0
+          };
+        }
+        data = {
+          title: item.name, subtitle: "Reserve",
+          description: item.system?.description || "",
+          tags, track
+        };
+        break;
+      }
+      default:
+        return;
+    }
+
+    await postFeatureToChat(this.actor, data);
   }
 
   /**

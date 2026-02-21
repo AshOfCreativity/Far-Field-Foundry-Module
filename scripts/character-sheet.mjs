@@ -4,6 +4,7 @@
  */
 
 import { MODULE_ID, FLAGS, getDefaultCharacterData, importCharacterData, isVessel, getVesselData } from "./main.mjs";
+import { postFeatureToChat } from "./chat.mjs";
 import {
   FAR_FIELD_SKILLS,
   FAR_FIELD_EDGES,
@@ -221,6 +222,9 @@ export class CharacterSheet extends ActorSheet {
   /** @override */
   activateListeners(html) {
     super.activateListeners(html);
+
+    // Chat feature buttons work for all viewers
+    html.find(".chat-feature").click(this._onChatFeature.bind(this));
 
     if (!this.isEditable) return;
 
@@ -1441,6 +1445,96 @@ export class CharacterSheet extends ActorSheet {
 
     await this.updateCharacterData(updates);
     ui.notifications.info("Progression applied!");
+  }
+
+  /**
+   * Handle chat feature button click
+   */
+  async _onChatFeature(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const el = event.currentTarget;
+    const type = el.dataset.featureType;
+    const id = el.dataset.featureId;
+    const charData = this.characterData;
+
+    let data;
+    switch (type) {
+      case "edge": {
+        const edge = FAR_FIELD_EDGES.find(e => e.id === id);
+        if (!edge) return;
+        data = { title: edge.name, subtitle: "Edge", description: edge.description };
+        break;
+      }
+      case "background": {
+        // id is "origin", "role", or "discipline"
+        const bgMap = { origin: this._getContextSync().selectedOrigin, role: this._getContextSync().selectedRole, discipline: this._getContextSync().selectedDiscipline };
+        const bg = bgMap[id];
+        if (!bg) return;
+        data = { title: bg.name, subtitle: id.charAt(0).toUpperCase() + id.slice(1), description: bg.description };
+        break;
+      }
+      case "skill": {
+        const skillDef = FAR_FIELD_SKILLS.find(s => s.id === id);
+        if (!skillDef) return;
+        const skillData = charData.skills?.[id] || { rank: 0 };
+        const pips = Array.from({ length: 3 }, (_, i) => i < skillData.rank ? "\u25C9" : "\u25CB").join(" ");
+        data = { title: skillDef.name, subtitle: "Skill", description: skillDef.description, tags: [`Rank ${skillData.rank} ${pips}`] };
+        break;
+      }
+      case "aspect": {
+        const aspect = (charData.aspects || []).find(a => a.id === id);
+        if (!aspect) return;
+        data = {
+          title: aspect.name, subtitle: "Aspect",
+          description: aspect.description,
+          tags: [aspect.type, aspect.sourceName].filter(Boolean),
+          track: { total: aspect.track, marked: aspect.marked, burned: aspect.burned }
+        };
+        break;
+      }
+      case "resource": {
+        const resource = (charData.resources || []).find(r => r.id === id);
+        if (!resource) return;
+        data = {
+          title: resource.name, subtitle: "Resource",
+          tags: [resource.type],
+          track: { total: resource.track, marked: resource.marked, burned: resource.burned }
+        };
+        break;
+      }
+      case "drive": {
+        const drive = (charData.drives || []).find(d => d.id === id);
+        if (!drive) return;
+        data = { title: drive.name, subtitle: "Drive", description: drive.note || "" };
+        break;
+      }
+      case "burden": {
+        const burden = (charData.burdens || []).find(b => b.id === id);
+        if (!burden) return;
+        data = {
+          title: burden.name, subtitle: "Burden",
+          track: { total: burden.track, marked: burden.marked, burned: burden.burned }
+        };
+        break;
+      }
+      default:
+        return;
+    }
+
+    await postFeatureToChat(this.actor, data);
+  }
+
+  /**
+   * Synchronous helper to get background lookup data without a full getData() call
+   */
+  _getContextSync() {
+    const charData = this.characterData;
+    return {
+      selectedOrigin: charData.backgrounds?.origin ? ORIGIN_OPTIONS.find(o => o.id === charData.backgrounds.origin.id) : null,
+      selectedRole: charData.backgrounds?.role ? ROLE_OPTIONS.find(r => r.id === charData.backgrounds.role.id) : null,
+      selectedDiscipline: charData.backgrounds?.discipline ? DISCIPLINE_OPTIONS.find(d => d.id === charData.backgrounds.discipline.id) : null
+    };
   }
 
   /**
