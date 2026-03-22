@@ -1,0 +1,141 @@
+<div class="hazard-entity-page">
+  {{!-- Entity Header --}}
+  <div class="entity-header">
+    <span class="entity-name">{{entity.name}}</span>
+    <span class="entity-category-badge cat-{{entity.category}}">
+      {{categoryLabel}}
+    </span>
+    <div class="entity-header-actions">
+      <button type="button" class="chat-entity-btn" title="Post entity to chat">
+        <i class="fas fa-comment-dots"></i>
+      </button>
+    </div>
+  </div>
+
+  {{!-- Description --}}
+  {{#if entity.description}}
+  <div class="entity-description">{{entity.description}}</div>
+  {{/if}}
+
+  {{!-- Entity Traits --}}
+  {{#if entity.traits.length}}
+  <div class="entity-traits">
+    <div class="section-label">ENTITY TRAITS</div>
+    {{#each entity.traits}}
+    <div class="trait-row">
+      <span class="trait-name">{{this.name}}</span>
+      {{#if this.effect}}
+      <span class="trait-effect">{{this.effect}}</span>
+      {{/if}}
+      {{#if this.appliesTo}}
+      <span class="trait-applies-to">({{this.appliesTo}})</span>
+      {{/if}}
+    </div>
+    {{/each}}
+  </div>
+  {{/if}}
+
+  {{!-- Contained Hazards --}}
+  {{#if entity.hazards.length}}
+  <div class="entity-hazards">
+    <div class="section-label">CONTAINED HAZARDS</div>
+    {{#each hazardData}}
+    <div class="hazard-block">
+      <div class="hazard-header">
+        <span class="hazard-name">{{this.name}}</span>
+        <span class="rating-badge rating-{{this.rating}}">{{this.rating}}</span>
+        {{#if this.category}}
+        <span class="hazard-category-tag">{{this.category}}</span>
+        {{/if}}
+        <button type="button" class="chat-hazard-btn" data-hazard-index="{{this.index}}" title="Post hazard to chat">
+          <i class="fas fa-comment"></i>
+        </button>
+      </div>
+
+      {{!-- Track Boxes --}}
+      {{#if this.track}}
+      <div class="hazard-track-row">
+        <span class="track-label">TRACK</span>
+        <span class="track-boxes">
+          {{#each this.trackState.boxes}}
+          <span class="track-box {{#if this.burned}}burned{{else if this.marked}}marked{{/if}}"
+                data-hazard-index="{{../index}}"
+                data-box-index="{{@index}}"
+                title="Left-click: mark | Right-click: burn">&#9633;</span>
+          {{/each}}
+        </span>
+        <span class="track-summary">
+          {{this.markedCount}}/{{this.track}} marked
+          {{#if this.burnedCount}}, {{this.burnedCount}} burned{{/if}}
+        </span>
+      </div>
+      {{/if}}
+
+      {{!-- Tags --}}
+      {{#if this.tags.length}}
+      <div class="hazard-tags-row">
+        {{#each this.tags}}
+        <span class="hazard-tag" title="{{this.effect}}">
+          {{this.name}}{{#if this.value}} {{this.value}}{{/if}}
+        </span>
+        {{/each}}
+      </div>
+      {{/if}}
+
+      {{!-- Skills --}}
+      {{#if this.skills.length}}
+      <div class="hazard-detail">
+        <span class="detail-label">Skills:</span>
+        <span class="detail-value">{{join this.skills ", "}}</span>
+      </div>
+      {{/if}}
+
+      {{!-- Consequences --}}
+      {{#if this.consequences}}
+      <div class="hazard-detail">
+        <span class="detail-label">Consequences:</span>
+        <span class="detail-value">{{this.consequences}}</span>
+      </div>
+      {{/if}}
+
+      {{!-- Combat Link --}}
+      {{#if this.combatLink}}
+      <div class="hazard-detail">
+        <span class="detail-label">Combat Link:</span>
+        <span class="detail-value">{{this.combatLink}}</span>
+      </div>
+      {{/if}}
+    </div>
+    {{/each}}
+  </div>
+  {{else}}
+  <div class="empty-hazards">No hazards assigned to this entity.</div>
+  {{/if}}
+
+  {{!-- Import Metadata --}}
+  {{#if entity.lcpFilename}}
+  <details class="import-metadata">
+    <summary>Import Info</summary>
+    <div class="metadata-content">
+      {{#if entity.lcpFilename}}
+      <div class="metadata-row">
+        <span class="metadata-label">Source:</span>
+        <span class="metadata-value">{{entity.lcpFilename}}</span>
+      </div>
+      {{/if}}
+      {{#if entity.importedAt}}
+      <div class="metadata-row">
+        <span class="metadata-label">Imported:</span>
+        <span class="metadata-value">{{entity.importedAt}}</span>
+      </div>
+      {{/if}}
+      {{#if entity.entityId}}
+      <div class="metadata-row">
+        <span class="metadata-label">Entity ID:</span>
+        <span class="metadata-value">{{entity.entityId}}</span>
+      </div>
+      {{/if}}
+    </div>
+  </details>
+  {{/if}}
+</div>

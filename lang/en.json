@@ -200,5 +200,54 @@
       "Marked": "Marked",
       "Burned": "Burned"
     }
+  },
+  "FARFIELD": {
+    "HazardEntity": {
+      "PageType": "Hazard Entity",
+      "SheetTitle": "Hazard Entity",
+      "Import": "Import Hazard Entities",
+      "ImportTitle": "Import Hazard Entities from LCP",
+      "ImportSelectFile": "Select Hazard Entity LCP File",
+      "ImportHint": "LCP file must contain a hazard_entities.json file.",
+      "ImportSuccess": "Imported {count} hazard entities",
+      "ImportError": "Import failed: {error}",
+      "Categories": {
+        "Personnel": "Personnel",
+        "Installation": "Installation",
+        "Environment": "Environment",
+        "Tactical": "Tactical",
+        "Anomaly": "Anomaly"
+      },
+      "Ratings": {
+        "Minor": "Minor",
+        "Standard": "Standard",
+        "Severe": "Severe",
+        "Critical": "Critical"
+      },
+      "Sections": {
+        "EntityTraits": "Entity Traits",
+        "ContainedHazards": "Contained Hazards",
+        "NoHazards": "No hazards assigned to this entity."
+      },
+      "Fields": {
+        "Track": "Track",
+        "Skills": "Skills",
+        "Consequences": "Consequences",
+        "CombatLink": "Combat Link",
+        "Marked": "Marked",
+        "Burned": "Burned"
+      },
+      "Chat": {
+        "PostEntity": "Post entity to chat",
+        "PostHazard": "Post hazard to chat"
+      },
+      "Metadata": {
+        "Title": "Import Info",
+        "Source": "Source",
+        "Imported": "Imported",
+        "EntityId": "Entity ID"
+      },
+      "TrackHint": "Left-click: mark | Right-click: burn"
+    }
   }
 }

@@ -111,6 +111,20 @@ export class VesselSheet extends ActorSheet {
       };
     });
 
+    // Prepare passengers with linked pilot data
+    context.passengers = (vesselData.passengers || []).map((member, index) => {
+      const pilot = member.pilotId ? game.actors.get(member.pilotId) : null;
+      return {
+        ...member,
+        index,
+        pilot: pilot ? {
+          name: pilot.name,
+          img: pilot.img,
+          id: pilot.id
+        } : null
+      };
+    });
+
     // Status display
     context.statusOptions = [
       { value: "operational", label: game.i18n.localize("VESSEL.Status.Operational") },
@@ -220,6 +234,14 @@ export class VesselSheet extends ActorSheet {
 
     // Open linked pilot sheet
     html.find(".open-pilot").click(this._onOpenPilot.bind(this));
+
+    // Passenger management
+    html.find(".add-passenger").click(this._onAddPassenger.bind(this));
+    html.find(".remove-passenger").click(this._onRemovePassenger.bind(this));
+    html.find(".link-passenger-pilot").change(this._onLinkPassengerPilot.bind(this));
+    html.find(".open-passenger-pilot").click(this._onOpenPilot.bind(this));
+    html.find('input[name^="passenger."]').change(this._onPassengerFieldChange.bind(this));
+    html.find('textarea[name^="passenger."]').change(this._onPassengerFieldChange.bind(this));
 
     // Add quality
     html.find(".add-quality").click(this._onAddQuality.bind(this));
@@ -412,6 +434,72 @@ export class VesselSheet extends ActorSheet {
     const pilot = game.actors.get(pilotId);
     if (pilot) {
       pilot.sheet.render(true);
+    }
+  }
+
+  /**
+   * Add a new passenger
+   */
+  async _onAddPassenger(event) {
+    event.preventDefault();
+    const passengers = [...(this.vesselData.passengers || [])];
+    passengers.push({
+      name: "",
+      role: "",
+      pilotId: null,
+      notes: ""
+    });
+    await this.updateVesselData({ passengers });
+  }
+
+  /**
+   * Remove a passenger
+   */
+  async _onRemovePassenger(event) {
+    event.preventDefault();
+    const index = parseInt(event.currentTarget.closest(".passenger-item").dataset.index);
+    const passengers = [...(this.vesselData.passengers || [])];
+    passengers.splice(index, 1);
+    await this.updateVesselData({ passengers });
+  }
+
+  /**
+   * Link a pilot to a passenger
+   */
+  async _onLinkPassengerPilot(event) {
+    event.preventDefault();
+    const index = parseInt(event.currentTarget.closest(".passenger-item").dataset.index);
+    const pilotId = event.currentTarget.value || null;
+    const passengers = [...(this.vesselData.passengers || [])];
+    passengers[index].pilotId = pilotId;
+
+    if (pilotId && !passengers[index].name) {
+      const pilot = game.actors.get(pilotId);
+      if (pilot) {
+        passengers[index].name = pilot.name;
+      }
+    }
+
+    await this.updateVesselData({ passengers });
+  }
+
+  /**
+   * Handle passenger field changes
+   */
+  async _onPassengerFieldChange(event) {
+    event.preventDefault();
+    const field = event.currentTarget;
+    const match = field.name.match(/passenger\.(\d+)\.(\w+)/);
+    if (!match) return;
+
+    const index = parseInt(match[1]);
+    const fieldName = match[2];
+    const value = field.value;
+
+    const passengers = [...(this.vesselData.passengers || [])];
+    if (passengers[index]) {
+      passengers[index][fieldName] = value;
+      await this.updateVesselData({ passengers });
     }
   }
 
@@ -645,6 +733,34 @@ export class VesselSheet extends ActorSheet {
             });
             await this.updateVesselData({ crew });
             ui.notifications.info(`Added ${actor.name} to the crew roster.`);
+          }
+        }
+      });
+    }
+
+    // Handle actor drops on passenger list
+    const passengerList = html.find(".passenger-list")[0];
+    if (passengerList) {
+      passengerList.addEventListener("dragover", (ev) => ev.preventDefault());
+      passengerList.addEventListener("drop", async (ev) => {
+        ev.preventDefault();
+        const data = JSON.parse(ev.dataTransfer.getData("text/plain") || "{}");
+        if (data.type === "Actor" && data.uuid) {
+          const actor = await fromUuid(data.uuid);
+          if (actor?.type === "pilot") {
+            const passengers = [...(this.vesselData.passengers || [])];
+            if (passengers.some(p => p.pilotId === actor.id)) {
+              ui.notifications.warn(`${actor.name} is already in the passenger manifest.`);
+              return;
+            }
+            passengers.push({
+              name: actor.name,
+              role: "",
+              pilotId: actor.id,
+              notes: ""
+            });
+            await this.updateVesselData({ passengers });
+            ui.notifications.info(`Added ${actor.name} to the passenger manifest.`);
           }
         }
       });

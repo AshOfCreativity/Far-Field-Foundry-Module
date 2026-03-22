@@ -10,6 +10,9 @@ import { VesselSheet } from "./vessel-sheet.mjs";
 import { CharacterSheet } from "./character-sheet.mjs";
 import { VESSEL_QUALITIES } from "./vessel-qualities.mjs";
 import { FAR_FIELD_SKILLS, FAR_FIELD_EDGES, getDefaultSkills } from "./character-data.mjs";
+import { HazardEntityPageModel, ENTITY_CATEGORIES } from "./hazard-entity-data.mjs";
+import { HazardEntityPageSheet } from "./hazard-entity-page-sheet.mjs";
+import { showHazardEntityImportDialog } from "./hazard-entity-lcp.mjs";
 
 // Module ID
 export const MODULE_ID = "Far-Field-Foundry-Module-main";
@@ -36,6 +39,7 @@ export function getDefaultVesselData() {
     supplies: { value: 4, max: 4 },
     systemsStatus: "operational",
     statusNotes: "",
+    passengers: [],
     missionLog: [],
     sharedSupplies: []
   };
@@ -83,15 +87,28 @@ Hooks.once("init", () => {
     label: "Far Field Character Sheet"
   });
 
+  // Register hazard entity journal page type
+  Object.assign(CONFIG.JournalEntryPage.dataModels, {
+    [`${MODULE_ID}.hazardEntity`]: HazardEntityPageModel
+  });
+
+  // Register hazard entity page sheet
+  DocumentSheetConfig.registerSheet(JournalEntryPage, MODULE_ID, HazardEntityPageSheet, {
+    types: [`${MODULE_ID}.hazardEntity`],
+    makeDefault: true,
+    label: "Hazard Entity Page"
+  });
+
   // Store data in module config for easy access
   game.modules.get(MODULE_ID).vesselQualities = VESSEL_QUALITIES;
   game.modules.get(MODULE_ID).farFieldSkills = FAR_FIELD_SKILLS;
   game.modules.get(MODULE_ID).farFieldEdges = FAR_FIELD_EDGES;
+  game.modules.get(MODULE_ID).entityCategories = ENTITY_CATEGORIES;
 
   // Register Handlebars helpers
   registerHandlebarsHelpers();
 
-  console.log(`${MODULE_ID} | Sheets registered for pilot actors`);
+  console.log(`${MODULE_ID} | Sheets and journal page types registered`);
 });
 
 /**
@@ -176,6 +193,12 @@ function registerHandlebarsHelpers() {
   Handlebars.registerHelper("add", function(a, b) {
     return a + b;
   });
+
+  // Join array helper
+  Handlebars.registerHelper("join", function(array, separator) {
+    if (!Array.isArray(array)) return "";
+    return array.join(typeof separator === "string" ? separator : ", ");
+  });
 }
 
 /**
@@ -196,6 +219,7 @@ Hooks.once("ready", () => {
   mod.updateCharacterData = updateCharacterData;
   mod.setFarFieldGear = setFarFieldGear;
   mod.getFarFieldGearData = getFarFieldGearData;
+  mod.importHazardEntities = showHazardEntityImportDialog;
 });
 
 /**
@@ -358,6 +382,35 @@ Hooks.on("renderActorDirectory", (app, html, data) => {
   } else {
     headerActions.prepend(vesselButton);
     headerActions.prepend(characterButton);
+  }
+});
+
+/**
+ * Hook: Render Journal Directory
+ * Add "Import Hazard Entities" button to the journal directory
+ */
+Hooks.on("renderJournalDirectory", (app, html, data) => {
+  if (game.system.id !== "lancer") return;
+
+  const headerActions = html.find(".header-actions");
+  if (!headerActions.length) return;
+
+  const importButton = $(`
+    <button type="button" class="import-hazard-entities-button" title="Import Hazard Entities from LCP">
+      <i class="fas fa-biohazard"></i> Import Hazard Entities
+    </button>
+  `);
+
+  importButton.on("click", (event) => {
+    event.preventDefault();
+    showHazardEntityImportDialog();
+  });
+
+  const createButton = headerActions.find(".create-document, .create-entry");
+  if (createButton.length) {
+    createButton.after(importButton);
+  } else {
+    headerActions.prepend(importButton);
   }
 });
 

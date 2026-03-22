@@ -34,6 +34,7 @@
     <a class="item" data-tab="overview">Overview</a>
     <a class="item" data-tab="qualities">Qualities</a>
     <a class="item" data-tab="crew">Crew</a>
+    <a class="item" data-tab="passengers">Passengers</a>
     <a class="item" data-tab="status">Status</a>
     <a class="item" data-tab="cargo">Cargo</a>
     <a class="item" data-tab="log">Mission Log</a>
@@ -113,6 +114,26 @@
           </ul>
           {{else}}
           <p class="empty-notice">No crew assigned. Go to the Crew tab or drag pilots here.</p>
+          {{/if}}
+        </div>
+
+        {{!-- Passengers Summary --}}
+        <div class="section passengers-summary">
+          <h3>Passengers ({{passengers.length}})</h3>
+          {{#if passengers.length}}
+          <ul class="passenger-list-mini">
+            {{#each passengers}}
+            <li class="passenger-mini">
+              {{#if pilot}}
+              <img src="{{pilot.img}}" class="passenger-portrait-mini" />
+              {{/if}}
+              <span class="passenger-name-mini">{{name}}</span>
+              {{#if role}}<span class="passenger-role-mini">- {{role}}</span>{{/if}}
+            </li>
+            {{/each}}
+          </ul>
+          {{else}}
+          <p class="empty-notice">No passengers aboard. Go to the Passengers tab to add them.</p>
           {{/if}}
         </div>
 
@@ -261,6 +282,70 @@
         <div class="empty-crew">
           <p>No crew members assigned.</p>
           <p class="hint">Click "Add Crew Member" or drag a Pilot actor here.</p>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+
+    {{!-- Passengers Tab --}}
+    <div class="tab passengers" data-group="primary" data-tab="passengers">
+      <div class="passenger-header">
+        <h3>Passenger Manifest</h3>
+        <p class="info-text">Special persons, VIPs, and other notable individuals aboard. Drag pilot actors here to link them.</p>
+        {{#if editable}}
+        <button type="button" class="add-passenger">
+          <i class="fas fa-user-plus"></i> Add Passenger
+        </button>
+        {{/if}}
+      </div>
+
+      <div class="passenger-list">
+        {{#each passengers}}
+        <div class="passenger-item" data-index="{{index}}">
+          <div class="passenger-portrait-container">
+            {{#if pilot}}
+            <img src="{{pilot.img}}" class="passenger-portrait" />
+            <button type="button" class="open-passenger-pilot" data-pilot-id="{{pilot.id}}" title="Open Sheet">
+              <i class="fas fa-external-link-alt"></i>
+            </button>
+            {{else}}
+            <div class="passenger-portrait placeholder">
+              <i class="fas fa-user-tie"></i>
+            </div>
+            {{/if}}
+          </div>
+
+          <div class="passenger-details">
+            <div class="passenger-field name-field">
+              <input type="text" name="passenger.{{index}}.name" value="{{name}}" placeholder="Passenger Name" {{#unless ../editable}}disabled{{/unless}}/>
+            </div>
+            <div class="passenger-field role-field">
+              <input type="text" name="passenger.{{index}}.role" value="{{role}}" placeholder="Title / Designation (e.g., Diplomat, Prisoner, Scientist)" {{#unless ../editable}}disabled{{/unless}}/>
+            </div>
+            <div class="passenger-field pilot-link">
+              <label>Linked Actor:</label>
+              <select class="link-passenger-pilot" {{#unless ../editable}}disabled{{/unless}}>
+                <option value="">-- None --</option>
+                {{#each ../pilots}}
+                <option value="{{id}}" {{#if (eq id ../pilotId)}}selected{{/if}}>{{name}}</option>
+                {{/each}}
+              </select>
+            </div>
+            <div class="passenger-field notes-field">
+              <textarea name="passenger.{{index}}.notes" placeholder="Notes..." {{#unless ../editable}}disabled{{/unless}}>{{notes}}</textarea>
+            </div>
+          </div>
+
+          {{#if ../editable}}
+          <button type="button" class="remove-passenger" title="Remove Passenger">
+            <i class="fas fa-trash"></i>
+          </button>
+          {{/if}}
+        </div>
+        {{else}}
+        <div class="empty-passengers">
+          <p>No passengers aboard.</p>
+          <p class="hint">Click "Add Passenger" or drag a Pilot actor here.</p>
         </div>
         {{/each}}
       </div>
