@@ -6,8 +6,7 @@
  * Reserves can be dragged onto the Cargo tab and marked as Far Field gear for track/burn mechanics.
  */
 
-import { VESSEL_QUALITIES } from "./vessel-qualities.mjs";
-import { MODULE_ID, FLAGS, getDefaultVesselData } from "./main.mjs";
+import { MODULE_ID, FLAGS, getDefaultVesselData, getAvailableVesselQualities } from "./main.mjs";
 import { postFeatureToChat } from "./chat.mjs";
 
 export class VesselSheet extends ActorSheet {
@@ -88,11 +87,12 @@ export class VesselSheet extends ActorSheet {
     context.vessel = vesselData;
     context.flags = actorData.flags;
 
-    // Add vessel qualities list for selection
-    context.availableQualities = VESSEL_QUALITIES.filter(q =>
+    // Add vessel qualities list for selection (from journal pages + compendium)
+    const allQualities = await getAvailableVesselQualities();
+    context.availableQualities = allQualities.filter(q =>
       !vesselData.qualities.some(sq => sq.id === q.id)
     );
-    context.allQualities = VESSEL_QUALITIES;
+    context.allQualities = allQualities;
 
     // Get linked pilots for crew
     context.pilots = this._getAvailablePilots();
@@ -510,13 +510,14 @@ export class VesselSheet extends ActorSheet {
     event.preventDefault();
 
     const currentQualities = this.vesselData.qualities || [];
+    const allQualities = await getAvailableVesselQualities();
 
-    const availableQualities = VESSEL_QUALITIES.filter(q =>
+    const availableQualities = allQualities.filter(q =>
       !currentQualities.some(cq => cq.id === q.id)
     );
 
     if (availableQualities.length === 0) {
-      ui.notifications.warn("All predefined qualities have been added. Use 'Create Custom Quality' for more.");
+      ui.notifications.warn("All available qualities have been added. Use 'Create Custom Quality' for more.");
       return;
     }
 
@@ -544,7 +545,7 @@ export class VesselSheet extends ActorSheet {
           label: "Add",
           callback: async (html) => {
             const qualityId = html.find('[name="quality"]').val();
-            const quality = VESSEL_QUALITIES.find(q => q.id === qualityId);
+            const quality = allQualities.find(q => q.id === qualityId);
             if (quality) {
               const qualities = [...this.vesselData.qualities, quality];
               await this.updateVesselData({ qualities });
@@ -560,7 +561,7 @@ export class VesselSheet extends ActorSheet {
       render: (html) => {
         html.find('[name="quality"]').change((event) => {
           const qualityId = event.currentTarget.value;
-          const quality = VESSEL_QUALITIES.find(q => q.id === qualityId);
+          const quality = allQualities.find(q => q.id === qualityId);
           html.find("#quality-desc").text(quality?.description || "");
         });
       }
@@ -639,7 +640,8 @@ export class VesselSheet extends ActorSheet {
   async _onSelectQuality(event) {
     event.preventDefault();
     const qualityId = event.currentTarget.dataset.qualityId;
-    const quality = VESSEL_QUALITIES.find(q => q.id === qualityId);
+    const allQualities = await getAvailableVesselQualities();
+    const quality = allQualities.find(q => q.id === qualityId);
 
     if (!quality) return;
 

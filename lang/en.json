@@ -248,6 +248,15 @@
         "EntityId": "Entity ID"
       },
       "TrackHint": "Left-click: mark | Right-click: burn"
+    },
+    "VesselQuality": {
+      "PageType": "Vessel Quality",
+      "SheetTitle": "Vessel Quality",
+      "Create": "New Vessel Quality",
+      "CreateTitle": "Create New Vessel Quality",
+      "PostToChat": "Post quality to chat",
+      "Source": "Source",
+      "Description": "Description"
     }
   }
 }

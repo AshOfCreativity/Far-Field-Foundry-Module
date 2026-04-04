@@ -13,6 +13,8 @@ import { FAR_FIELD_SKILLS, FAR_FIELD_EDGES, getDefaultSkills } from "./character
 import { HazardEntityPageModel, ENTITY_CATEGORIES } from "./hazard-entity-data.mjs";
 import { HazardEntityPageSheet } from "./hazard-entity-page-sheet.mjs";
 import { showHazardEntityImportDialog } from "./hazard-entity-lcp.mjs";
+import { VesselQualityPageModel } from "./vessel-quality-data.mjs";
+import { VesselQualityPageSheet } from "./vessel-quality-page-sheet.mjs";
 
 // Module ID
 export const MODULE_ID = "Far-Field-Foundry-Module-main";
@@ -97,6 +99,18 @@ Hooks.once("init", () => {
     types: [`${MODULE_ID}.hazardEntity`],
     makeDefault: true,
     label: "Hazard Entity Page"
+  });
+
+  // Register vessel quality journal page type
+  Object.assign(CONFIG.JournalEntryPage.dataModels, {
+    [`${MODULE_ID}.vesselQuality`]: VesselQualityPageModel
+  });
+
+  // Register vessel quality page sheet
+  DocumentSheetConfig.registerSheet(JournalEntryPage, MODULE_ID, VesselQualityPageSheet, {
+    types: [`${MODULE_ID}.vesselQuality`],
+    makeDefault: true,
+    label: "Vessel Quality Page"
   });
 
   // Store data in module config for easy access
@@ -204,7 +218,7 @@ function registerHandlebarsHelpers() {
 /**
  * Hook: Ready - Module fully loaded
  */
-Hooks.once("ready", () => {
+Hooks.once("ready", async () => {
   console.log(`${MODULE_ID} | LANCER Far Field Sheets ready`);
 
   // Make functions available globally for macros
@@ -220,6 +234,17 @@ Hooks.once("ready", () => {
   mod.setFarFieldGear = setFarFieldGear;
   mod.getFarFieldGearData = getFarFieldGearData;
   mod.importHazardEntities = showHazardEntityImportDialog;
+  mod.getAvailableVesselQualities = getAvailableVesselQualities;
+
+  // Seed vessel qualities compendium if empty
+  const packName = `${MODULE_ID}.vessel-qualities`;
+  const pack = game.packs.get(packName);
+  if (pack) {
+    const index = await pack.getIndex();
+    if (index.size === 0) {
+      await seedVesselQualitiesPack(pack);
+    }
+  }
 });
 
 /**
@@ -406,13 +431,136 @@ Hooks.on("renderJournalDirectory", (app, html, data) => {
     showHazardEntityImportDialog();
   });
 
+  const qualityButton = $(`
+    <button type="button" class="create-vessel-quality-button" title="Create a new Vessel Quality">
+      <i class="fas fa-star"></i> New Vessel Quality
+    </button>
+  `);
+
+  qualityButton.on("click", (event) => {
+    event.preventDefault();
+    createVesselQualityPage();
+  });
+
   const createButton = headerActions.find(".create-document, .create-entry");
   if (createButton.length) {
     createButton.after(importButton);
+    importButton.after(qualityButton);
   } else {
+    headerActions.prepend(qualityButton);
     headerActions.prepend(importButton);
   }
 });
+
+/**
+ * Get all available vessel qualities from world journals and compendium
+ * @returns {Promise<Array<{id: string, name: string, description: string}>>}
+ */
+export async function getAvailableVesselQualities() {
+  const qualities = [];
+  const seen = new Set();
+
+  // World journal pages of type vesselQuality
+  for (const journal of game.journal) {
+    for (const page of journal.pages) {
+      if (page.type === `${MODULE_ID}.vesselQuality`) {
+        if (!seen.has(page.id)) {
+          seen.add(page.id);
+          qualities.push({ id: page.id, name: page.name, description: page.system.description });
+        }
+      }
+    }
+  }
+
+  // Compendium pack
+  const packName = `${MODULE_ID}.vessel-qualities`;
+  const pack = game.packs.get(packName);
+  if (pack) {
+    const documents = await pack.getDocuments();
+    for (const journal of documents) {
+      for (const page of journal.pages) {
+        if (page.type === `${MODULE_ID}.vesselQuality` && !seen.has(page.id)) {
+          seen.add(page.id);
+          qualities.push({ id: page.id, name: page.name, description: page.system.description });
+        }
+      }
+    }
+  }
+
+  return qualities;
+}
+
+/**
+ * Seed the vessel qualities compendium pack with predefined qualities
+ */
+async function seedVesselQualitiesPack(pack) {
+  const journalData = {
+    name: "Vessel Qualities",
+    pages: VESSEL_QUALITIES.map(q => ({
+      name: q.name,
+      type: `${MODULE_ID}.vesselQuality`,
+      system: {
+        description: q.description,
+        source: "compendium"
+      }
+    }))
+  };
+
+  await pack.configure({ locked: false });
+  const cls = pack.documentClass;
+  await cls.create(journalData, { pack: pack.collection });
+  await pack.configure({ locked: true });
+
+  console.log(`${MODULE_ID} | Seeded vessel qualities compendium with ${VESSEL_QUALITIES.length} qualities`);
+}
+
+/**
+ * Create a new vessel quality journal page
+ */
+async function createVesselQualityPage() {
+  const content = `<form>
+    <div class="form-group">
+      <label>Quality Name:</label>
+      <input type="text" name="name" value="New Vessel Quality" autofocus/>
+    </div>
+    <div class="form-group">
+      <label>Description:</label>
+      <textarea name="description" rows="4"></textarea>
+    </div>
+  </form>`;
+
+  new Dialog({
+    title: "Create Vessel Quality",
+    content,
+    buttons: {
+      create: {
+        icon: '<i class="fas fa-star"></i>',
+        label: "Create",
+        callback: async (html) => {
+          const qualityName = html.find('[name="name"]').val()?.trim() || "New Vessel Quality";
+          const description = html.find('[name="description"]').val()?.trim() || "";
+          const journal = await JournalEntry.create({
+            name: qualityName,
+            pages: [{
+              name: qualityName,
+              type: `${MODULE_ID}.vesselQuality`,
+              system: { description, source: "custom" }
+            }]
+          });
+          if (journal) {
+            journal.sheet.render(true);
+            ui.notifications.info(`Created vessel quality: ${qualityName}`);
+          }
+        }
+      },
+      cancel: {
+        icon: '<i class="fas fa-times"></i>',
+        label: "Cancel"
+      }
+    },
+    default: "create"
+  }).render(true);
+}
 
 /**
  * Create a new vessel actor

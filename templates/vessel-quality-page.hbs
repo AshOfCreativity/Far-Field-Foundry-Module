@@ -1,0 +1,27 @@
+<div class="vessel-quality-page">
+  <div class="quality-page-header">
+    <span class="quality-page-name">{{quality.name}}</span>
+    <div class="quality-page-actions">
+      <button type="button" class="chat-quality-btn" title="Post quality to chat">
+        <i class="fas fa-comment-dots"></i>
+      </button>
+    </div>
+  </div>
+
+  {{#if editable}}
+  <div class="quality-page-edit">
+    <div class="form-group">
+      <label>Description</label>
+      <textarea name="system.description" rows="6">{{quality.description}}</textarea>
+    </div>
+  </div>
+  {{else}}
+  <div class="quality-page-description">{{{quality.description}}}</div>
+  {{/if}}
+
+  {{#if quality.source}}
+  <div class="quality-page-source">
+    <span class="source-label">Source:</span> {{quality.source}}
+  </div>
+  {{/if}}
+</div>

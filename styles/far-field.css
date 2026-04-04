@@ -3654,3 +3654,80 @@
 .hazard-entity-page .metadata-value {
   color: var(--he-text);
 }
+
+/* ============================= */
+/* Vessel Quality Page Sheet     */
+/* ============================= */
+.vessel-quality-page {
+  --vq-bg: #1a1a2e;
+  --vq-text: #e0e0e0;
+  --vq-text-dim: #8a8a9a;
+  --vq-accent: #ff6b35;
+  --vq-border: #3a3a5e;
+
+  background: var(--vq-bg);
+  color: var(--vq-text);
+  font-family: 'Courier New', 'Consolas', monospace;
+  padding: 0.75rem;
+}
+
+.vessel-quality-page .quality-page-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--vq-border);
+  padding-bottom: 0.5rem;
+}
+
+.vessel-quality-page .quality-page-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: var(--vq-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.vessel-quality-page .quality-page-actions {
+  margin-left: auto;
+}
+
+.vessel-quality-page .quality-page-actions button {
+  background: rgba(37, 37, 64, 1);
+  border: 1px solid var(--vq-border);
+  color: var(--vq-text-dim);
+  padding: 0.2rem 0.4rem;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+
+.vessel-quality-page .quality-page-actions button:hover {
+  border-color: var(--vq-accent);
+  color: var(--vq-accent);
+}
+
+.vessel-quality-page .quality-page-description {
+  color: var(--vq-text-dim);
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+}
+
+.vessel-quality-page .quality-page-edit textarea {
+  width: 100%;
+  background: rgba(22, 22, 42, 1);
+  border: 1px solid var(--vq-border);
+  color: var(--vq-text);
+  padding: 0.5rem;
+  border-radius: 3px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.vessel-quality-page .quality-page-source {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--vq-text-dim);
+  font-style: italic;
+}
