@@ -779,6 +779,40 @@ export function importCharacterData(jsonData) {
     Object.assign(skills, data.skills);
   }
 
+  // Convert aspects — normalize markedBoxes/burnedBoxes to marked/burned
+  const aspects = Array.isArray(data.aspects) ? data.aspects.filter(a => a).map(a => ({
+    ...a,
+    marked: a.marked ?? a.markedBoxes ?? 0,
+    burned: a.burned ?? a.burnedBoxes ?? 0
+  })) : [];
+  // Clean up web app field names
+  for (const a of aspects) {
+    delete a.markedBoxes;
+    delete a.burnedBoxes;
+  }
+
+  // Convert resources — same markedBoxes/burnedBoxes normalization
+  const resources = Array.isArray(data.resources) ? data.resources.filter(r => r).map(r => ({
+    ...r,
+    marked: r.marked ?? r.markedBoxes ?? 0,
+    burned: r.burned ?? r.burnedBoxes ?? 0
+  })) : [];
+  for (const r of resources) {
+    delete r.markedBoxes;
+    delete r.burnedBoxes;
+  }
+
+  // Convert burdens — same normalization
+  const burdens = Array.isArray(data.burdens) ? data.burdens.filter(b => b).map(b => ({
+    ...b,
+    marked: b.marked ?? b.markedBoxes ?? 0,
+    burned: b.burned ?? b.burnedBoxes ?? 0
+  })) : [];
+  for (const b of burdens) {
+    delete b.markedBoxes;
+    delete b.burnedBoxes;
+  }
+
   // Build Foundry-compatible character data with safe defaults
   return {
     name: data.name || null,
@@ -789,10 +823,10 @@ export function importCharacterData(jsonData) {
       discipline: data.backgrounds?.discipline || null
     },
     skills,
-    aspects: Array.isArray(data.aspects) ? data.aspects.filter(a => a) : [],
-    resources: Array.isArray(data.resources) ? data.resources.filter(r => r) : [],
+    aspects,
+    resources,
     drives: Array.isArray(data.drives) ? data.drives.filter(d => d) : [],
-    burdens: Array.isArray(data.burdens) ? data.burdens.filter(b => b) : [],
+    burdens,
     milestones: Array.isArray(data.milestones) ? data.milestones.filter(m => m) : [],
     progressionLog: Array.isArray(data.progressionLog) ? data.progressionLog : []
   };
