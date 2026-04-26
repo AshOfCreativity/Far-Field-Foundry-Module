@@ -45,6 +45,16 @@ export class CharacterSheet extends ActorSheet {
 
   /** @override */
   async _render(force, options) {
+    // Repair legacy imports: web app used to store edges as objects, Foundry expects ID strings.
+    // Without this, the click handler can't match IDs and edges appear frozen at 3/3.
+    if (this.isEditable) {
+      const raw = this.actor.getFlag(MODULE_ID, FLAGS.character);
+      if (Array.isArray(raw?.edges) && raw.edges.some(e => typeof e !== 'string')) {
+        const cleanEdges = raw.edges.map(e => typeof e === 'string' ? e : e?.id).filter(Boolean);
+        await this.actor.setFlag(MODULE_ID, FLAGS.character, { ...raw, edges: cleanEdges });
+      }
+    }
+
     await super._render(force, options);
 
     // Register hook to listen for vessel updates (only once)
@@ -79,10 +89,19 @@ export class CharacterSheet extends ActorSheet {
   }
 
   /**
-   * Get character data from flags
+   * Get character data from flags.
+   * Edges must be ID strings; coerce here so any malformed flag data (e.g. legacy
+   * web-app imports that stored full edge objects) can never freeze the click handler.
    */
   get characterData() {
-    return this.actor.getFlag(MODULE_ID, FLAGS.character) || getDefaultCharacterData();
+    const data = this.actor.getFlag(MODULE_ID, FLAGS.character) || getDefaultCharacterData();
+    if (Array.isArray(data.edges) && data.edges.some(e => typeof e !== 'string')) {
+      return {
+        ...data,
+        edges: data.edges.map(e => typeof e === 'string' ? e : e?.id).filter(Boolean)
+      };
+    }
+    return data;
   }
 
   /**
@@ -292,7 +311,9 @@ export class CharacterSheet extends ActorSheet {
   }
 
   /**
-   * Handle edge card click
+   * Handle edge card click — always toggles, no cap. The "3 edges" guideline
+   * is shown in the UI but not enforced here, so the click handler never has
+   * a return-without-write path that would feel like a frozen sheet.
    */
   async _onEdgeClick(event) {
     event.preventDefault();
@@ -300,16 +321,8 @@ export class CharacterSheet extends ActorSheet {
     const edges = [...(this.characterData.edges || [])];
     const index = edges.indexOf(edgeId);
 
-    if (index >= 0) {
-      // Remove edge
-      edges.splice(index, 1);
-    } else if (edges.length < 3) {
-      // Add edge (max 3)
-      edges.push(edgeId);
-    } else {
-      ui.notifications.warn("You can only select 3 edges.");
-      return;
-    }
+    if (index >= 0) edges.splice(index, 1);
+    else            edges.push(edgeId);
 
     await this.updateCharacterData({ edges });
   }

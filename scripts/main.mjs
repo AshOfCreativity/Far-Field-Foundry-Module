@@ -814,9 +814,12 @@ export function importCharacterData(jsonData) {
   }
 
   // Build Foundry-compatible character data with safe defaults
+  // Web app stores edges as objects ({id, name, description}); Foundry expects ID strings.
   return {
     name: data.name || null,
-    edges: Array.isArray(data.edges) ? data.edges.filter(e => e) : [],
+    edges: Array.isArray(data.edges)
+      ? data.edges.map(e => typeof e === 'string' ? e : e?.id).filter(Boolean)
+      : [],
     backgrounds: {
       origin: data.backgrounds?.origin || null,
       role: data.backgrounds?.role || null,
