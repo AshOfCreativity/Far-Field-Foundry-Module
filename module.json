@@ -2,7 +2,7 @@
   "id": "Far-Field-Foundry-Module-main",
   "title": "LANCER Far Field Sheets",
   "description": "Adds Far Field character sheets, vessel sheets, and hazard entity import for LANCER. Track ranger-class ships, crew, qualities, and status. Create Far Field characters with edges, backgrounds, skills, aspects, and progression. Import hazard entities from LCP files with interactive track boxes.",
-  "version": "2.3.3",
+  "version": "2.4.0",
   "compatibility": {
     "minimum": "11",
     "verified": "12"
@@ -52,7 +52,7 @@
       "system": "lancer"
     }
   ],
-  "socket": false,
+  "socket": true,
   "url": "https://github.com/AshOfCreativity/Far-Field-Foundry-Module",
   "manifest": "https://raw.githubusercontent.com/AshOfCreativity/Far-Field-Foundry-Module/main/module.json",
   "download": "https://github.com/AshOfCreativity/Far-Field-Foundry-Module/archive/refs/heads/main.zip"

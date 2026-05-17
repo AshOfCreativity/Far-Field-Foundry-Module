@@ -1,0 +1,58 @@
+<div class="sp-header">
+  <h1><i class="fas fa-users"></i> Far Field Squad Pools</h1>
+  <button type="button" class="sp-create-pool">
+    <i class="fas fa-plus"></i> New Pool
+  </button>
+</div>
+
+<div class="sp-pools-list">
+  {{#each pools}}
+    <div class="sp-pool sp-pool-{{status}}" data-pool-id="{{id}}">
+      <div class="sp-pool-head">
+        <span class="sp-pool-title">{{optionName}}</span>
+        <span class="sp-pool-status sp-pool-status-{{status}}">{{status}}</span>
+      </div>
+      <div class="sp-pool-meta">
+        Initiator: {{initiatorName}} · Per-player cost: {{perPlayerCost}} · Squad size: {{members.length}}
+      </div>
+      <div class="sp-pool-meta">
+        {{totalContributed}} / {{totalCost}} milestones contributed
+        {{#if (eq status "available")}}· ready to claim{{/if}}
+      </div>
+      <div class="sp-progress"><div class="sp-progress-fill" style="width: {{progressPercent}}%"></div></div>
+
+      <div class="sp-members">
+        {{#each members}}
+          <div class="sp-member-row">
+            <div class="sp-member-name {{#if isOwner}}sp-member-mine{{/if}}">{{name}}{{#if isOwner}} (you){{/if}}</div>
+            <div class="sp-member-contrib">{{contributed}} contributed</div>
+            <div class="sp-member-claim {{#if claim}}sp-member-claim-done{{else}}sp-member-claim-pending{{/if}}">
+              {{#if claim}}claimed: {{claim.targetName}}{{else}}unclaimed{{/if}}
+            </div>
+            <div>
+              {{#if canClaim}}
+                <button type="button" class="sp-pool-claim" data-pool-id="{{../id}}" data-actor-id="{{actorId}}">Claim</button>
+              {{/if}}
+            </div>
+          </div>
+        {{/each}}
+      </div>
+
+      <div class="sp-pool-actions">
+        {{#if canContribute}}
+          <button type="button" class="sp-pool-contribute" data-pool-id="{{id}}">Contribute</button>
+        {{/if}}
+        {{#if canCancel}}
+          <button type="button" class="sp-pool-cancel" data-pool-id="{{id}}">Cancel</button>
+        {{/if}}
+        {{#if canDismiss}}
+          <button type="button" class="sp-pool-dismiss" data-pool-id="{{id}}">Dismiss</button>
+        {{/if}}
+      </div>
+    </div>
+  {{else}}
+    <div class="sp-empty">
+      <p>No squad pools yet. Click <strong>New Pool</strong> to start one.</p>
+    </div>
+  {{/each}}
+</div>

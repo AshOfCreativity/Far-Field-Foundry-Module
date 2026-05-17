@@ -269,13 +269,14 @@ export const STANDARD_SUPPLIES = [
   { id: 'comm_unit', name: 'Comm Unit', type: 'Equipment', track: 2, description: 'Personal communication device.' }
 ];
 
-// Progression options with costs
+// Progression options. Cost is per-squad-member; the total cost of a pool
+// is perPlayerCost × number of squad members in the pool.
 export const PROGRESSION_OPTIONS = [
-  { type: 'skill_rank', name: '+1 Skill Rank', cost: 2, description: 'Increase the rank of an existing skill by 1 (max 3).' },
-  { type: 'new_skill', name: 'New Skill at Rank 1', cost: 3, description: 'Add a new skill at Rank 1.' },
-  { type: 'aspect_box', name: '+1 Aspect Box', cost: 2, description: 'Add one box to an existing aspect\'s track.' },
-  { type: 'background_aspect', name: 'New Background Aspect', cost: 3, description: 'Add a new aspect from one of your backgrounds.' },
-  { type: 'any_aspect', name: 'Any Aspect', cost: 4, description: 'Add any aspect from any background.' }
+  { type: 'skill_rank', name: '+1 Skill Rank', perPlayerCost: 3, description: 'Each squad member increases the rank of one of their skills by 1 (max 3).' },
+  { type: 'aspect_box', name: '+1 Aspect Box', perPlayerCost: 3, description: 'Each squad member adds one box to one of their aspects.' },
+  { type: 'new_skill', name: 'New Skill at Rank 1', perPlayerCost: 6, description: 'Each squad member gains a new skill at Rank 1.' },
+  { type: 'background_aspect', name: 'New Background Aspect', perPlayerCost: 6, description: 'Each squad member gains a new aspect from one of their backgrounds.' },
+  { type: 'any_aspect', name: 'Any Aspect', perPlayerCost: 9, description: 'Each squad member gains any aspect from any background.' }
 ];
 
 /**

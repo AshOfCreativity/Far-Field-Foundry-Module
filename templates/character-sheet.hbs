@@ -583,20 +583,23 @@
       <div class="advancement-section">
         <div class="section-header">
           <h3>Advancement</h3>
-          <p class="info-text">Spend milestones to improve your character.</p>
+          <p class="info-text">Squad pools are shared milestone purchases. Open the pools window to create one, contribute milestones, or claim a purchased benefit.</p>
         </div>
+        <button type="button" class="open-squad-pools">
+          <i class="fas fa-users"></i> Open Squad Pools
+        </button>
 
-        <div class="progression-options-list">
-          {{#each progressionOptions}}
-          <div class="progression-option {{#if (lt ../availableMilestoneCount cost)}}disabled{{/if}}" data-type="{{type}}">
-            <div class="progression-header">
-              <span class="progression-name">{{name}}</span>
-              <span class="progression-cost">Cost: {{cost}} milestones</span>
-            </div>
-            <div class="progression-description">{{description}}</div>
-          </div>
-          {{/each}}
-        </div>
+        <details class="advancement-reference">
+          <summary>Advancement reference</summary>
+          <ul class="progression-options-reference">
+            {{#each progressionOptions}}
+            <li>
+              <strong>{{name}}</strong> — {{perPlayerCost}} milestones per squad member.
+              <span class="progression-description">{{description}}</span>
+            </li>
+            {{/each}}
+          </ul>
+        </details>
       </div>
 
       {{!-- Progression Log --}}

@@ -15,6 +15,12 @@ import { HazardEntityPageSheet } from "./hazard-entity-page-sheet.mjs";
 import { showHazardEntityImportDialog } from "./hazard-entity-lcp.mjs";
 import { VesselQualityPageModel } from "./vessel-quality-data.mjs";
 import { VesselQualityPageSheet } from "./vessel-quality-page-sheet.mjs";
+import {
+  registerSquadPoolSettings,
+  registerSquadPoolSocket,
+  openSquadPools,
+  getPools as getSquadPools
+} from "./squad-pools-app.mjs";
 
 // Module ID
 export const MODULE_ID = "Far-Field-Foundry-Module-main";
@@ -121,6 +127,9 @@ Hooks.once("init", () => {
 
   // Register Handlebars helpers
   registerHandlebarsHelpers();
+
+  // Register the world-scope setting for squad pools.
+  registerSquadPoolSettings();
 
   console.log(`${MODULE_ID} | Sheets and journal page types registered`);
 });
@@ -235,6 +244,11 @@ Hooks.once("ready", async () => {
   mod.getFarFieldGearData = getFarFieldGearData;
   mod.importHazardEntities = showHazardEntityImportDialog;
   mod.getAvailableVesselQualities = getAvailableVesselQualities;
+  mod.openSquadPools = openSquadPools;
+  mod.getSquadPools = getSquadPools;
+
+  // Hook up the squad-pool socket handler (GM-side write proxy + all-client refresh)
+  registerSquadPoolSocket();
 
   // Seed vessel qualities compendium if empty
   const packName = `${MODULE_ID}.vessel-qualities`;
@@ -408,6 +422,22 @@ Hooks.on("renderActorDirectory", (app, html, data) => {
     headerActions.prepend(vesselButton);
     headerActions.prepend(characterButton);
   }
+});
+
+/**
+ * Hook: Add a "Squad Pools" button to the scene controls so anyone can open
+ * the pool window from anywhere in the world (without going through a sheet).
+ */
+Hooks.on("getSceneControlButtons", (controls) => {
+  const notes = controls.find(c => c.name === "notes");
+  if (!notes) return;
+  notes.tools.push({
+    name: "far-field-squad-pools",
+    title: "Far Field Squad Pools",
+    icon: "fas fa-users",
+    button: true,
+    onClick: () => openSquadPools()
+  });
 });
 
 /**
