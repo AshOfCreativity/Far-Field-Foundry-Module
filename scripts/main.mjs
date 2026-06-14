@@ -19,7 +19,8 @@ import {
   registerSquadPoolSettings,
   registerSquadPoolSocket,
   openSquadPools,
-  getPools as getSquadPools
+  getPools as getSquadPools,
+  SquadPoolsApp
 } from "./squad-pools-app.mjs";
 
 // Module ID
@@ -114,10 +115,57 @@ export function registerFarFieldSheets() {
 }
 
 /**
+ * Bind each sheet class to its real Foundry base class.
+ *
+ * Our sheet classes extend a trivial placeholder at import time because the core
+ * base classes (ActorSheet / JournalPageSheet / Application) are not guaranteed to
+ * exist the moment this module is first evaluated. Referencing one in an `extends`
+ * clause at import time is exactly what produced "Class extends value undefined is
+ * not a constructor" and aborted the whole module (taking the directory buttons and
+ * every sheet down with it). By the time `init` fires, the base classes always
+ * exist, so we re-point each class's prototype chain at the real base here.
+ *
+ * Re-parenting both the constructor (static side) and the prototype (instance side)
+ * means `super.*` calls and `instanceof` resolve through the live base exactly as if
+ * we had written `extends ActorSheet` directly. This runs before any sheet is ever
+ * instantiated, so the placeholder is never actually used.
+ */
+function reparentFarFieldSheetBases() {
+  const reparent = (sub, base) => {
+    if (!sub || !base) return false;
+    Object.setPrototypeOf(sub, base);                      // static side (e.g. super.defaultOptions)
+    Object.setPrototypeOf(sub.prototype, base.prototype);  // instance side (super.getData, instanceof)
+    return true;
+  };
+
+  const actorBase = globalThis.ActorSheet ?? foundry?.appv1?.sheets?.ActorSheet;
+  const journalBase = globalThis.JournalPageSheet ?? foundry?.appv1?.sheets?.JournalPageSheet;
+  const appBase = globalThis.Application ?? foundry?.appv1?.api?.Application;
+
+  const ok =
+    reparent(VesselSheet, actorBase) &
+    reparent(CharacterSheet, actorBase) &
+    reparent(HazardEntityPageSheet, journalBase) &
+    reparent(VesselQualityPageSheet, journalBase) &
+    reparent(SquadPoolsApp, appBase);
+
+  if (!ok) {
+    console.error(`${MODULE_ID} | Could not resolve base sheet classes`, { actorBase, journalBase, appBase });
+    ui.notifications?.error("Far Field: could not bind sheet base classes — see console (F12).");
+  } else {
+    console.log(`${MODULE_ID} | Bound sheet classes to their Foundry base classes`);
+  }
+  return Boolean(ok);
+}
+
+/**
  * Hook: Initialize module
  */
 Hooks.once("init", () => {
   console.log(`${MODULE_ID} | Initializing LANCER Far Field Sheets`);
+
+  // Bind our sheet classes to the real Foundry base classes, now that they exist.
+  reparentFarFieldSheetBases();
 
   // Register the vessel and character sheets for pilot actors
   registerFarFieldSheets();

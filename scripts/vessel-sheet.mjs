@@ -9,14 +9,15 @@
 import { MODULE_ID, FLAGS, getDefaultVesselData, getAvailableVesselQualities } from "./main.mjs";
 import { postFeatureToChat } from "./chat.mjs";
 
-// Resolve the ActorSheet base from the live runtime instead of hard-binding a
-// global the instant this file is imported. If the base isn't resolvable at that
-// instant, `class extends <undefined>` throws and aborts the ENTIRE module — which
-// is exactly what strips the actor-directory buttons AND every sheet at once with
-// no popup. Resolving it here (global first) keeps the module loading.
-const ActorSheetBase = globalThis.ActorSheet ?? foundry?.appv1?.sheets?.ActorSheet;
+// The core sheet base classes are not guaranteed to exist at the instant this
+// module is first imported. Referencing one in an `extends` clause at import time
+// is exactly what throws "Class extends value undefined is not a constructor" and
+// aborts the WHOLE module (removing the directory buttons AND every sheet at once,
+// with no popup). So we extend a trivial placeholder now and swap in the real
+// ActorSheet base during `init` — see reparentFarFieldSheetBases() in main.mjs.
+class _FarFieldSheetBase {}
 
-export class VesselSheet extends ActorSheetBase {
+export class VesselSheet extends _FarFieldSheetBase {
 
   /** @override */
   static get defaultOptions() {

@@ -18,10 +18,11 @@ import {
   getDefaultSkills
 } from "./character-data.mjs";
 
-// Resolve the ActorSheet base from the live runtime (see vessel-sheet.mjs).
-const ActorSheetBase = globalThis.ActorSheet ?? foundry?.appv1?.sheets?.ActorSheet;
+// Extend a placeholder at import time; the real ActorSheet base is bound during
+// `init` (see reparentFarFieldSheetBases() in main.mjs and vessel-sheet.mjs).
+class _FarFieldSheetBase {}
 
-export class CharacterSheet extends ActorSheetBase {
+export class CharacterSheet extends _FarFieldSheetBase {
 
   /** @override */
   static get defaultOptions() {

@@ -214,11 +214,12 @@ function applyTargetToCharacter(actor, type, target) {
 /*  The Application class                                             */
 /* ------------------------------------------------------------------ */
 
-// Resolve the Application base from the live runtime instead of binding the
-// global at import time, so a missing global can't abort module load. Global first.
-const ApplicationBase = globalThis.Application ?? foundry?.appv1?.api?.Application;
+// Extend a placeholder at import time; the real Application base is bound during
+// `init` (see reparentFarFieldSheetBases() in main.mjs). Referencing the base at
+// import time can throw "class extends undefined" and abort the module.
+class _FarFieldAppBase {}
 
-export class SquadPoolsApp extends ApplicationBase {
+export class SquadPoolsApp extends _FarFieldAppBase {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       id: "lancer-far-field-squad-pools",

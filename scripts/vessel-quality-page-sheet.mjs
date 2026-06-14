@@ -7,10 +7,11 @@
 
 import { MODULE_ID } from "./main.mjs";
 
-// Resolve the JournalPageSheet base from the live runtime (see hazard-entity-page-sheet.mjs).
-const JournalPageSheetBase = globalThis.JournalPageSheet ?? foundry?.appv1?.sheets?.JournalPageSheet;
+// Extend a placeholder at import time; the real JournalPageSheet base is bound
+// during `init` (see reparentFarFieldSheetBases() in main.mjs).
+class _FarFieldJournalPageBase {}
 
-export class VesselQualityPageSheet extends JournalPageSheetBase {
+export class VesselQualityPageSheet extends _FarFieldJournalPageBase {
 
   /** @override */
   static get defaultOptions() {

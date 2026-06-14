@@ -8,12 +8,12 @@
 import { MODULE_ID } from "./main.mjs";
 import { ENTITY_CATEGORIES, RATING_LEVELS } from "./hazard-entity-data.mjs";
 
-// Resolve the JournalPageSheet base from the live runtime instead of binding the
-// global at import time — a missing base here would `class extends <undefined>`
-// and abort the whole module. Global first.
-const JournalPageSheetBase = globalThis.JournalPageSheet ?? foundry?.appv1?.sheets?.JournalPageSheet;
+// Extend a placeholder at import time; the real JournalPageSheet base is bound
+// during `init` (see reparentFarFieldSheetBases() in main.mjs). Referencing the
+// base at import time can throw "class extends undefined" and abort the module.
+class _FarFieldJournalPageBase {}
 
-export class HazardEntityPageSheet extends JournalPageSheetBase {
+export class HazardEntityPageSheet extends _FarFieldJournalPageBase {
 
   /** @override */
   static get defaultOptions() {
