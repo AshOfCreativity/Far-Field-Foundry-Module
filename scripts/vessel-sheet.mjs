@@ -9,11 +9,12 @@
 import { MODULE_ID, FLAGS, getDefaultVesselData, getAvailableVesselQualities } from "./main.mjs";
 import { postFeatureToChat } from "./chat.mjs";
 
-// Resolve the v1 ActorSheet base in a version-safe way. On Foundry v13 the
-// global is deprecated in favour of foundry.appv1.sheets.ActorSheet; on v12 the
-// namespace doesn't exist yet so we fall back to the global. This also prevents
-// `class extends undefined` from silently killing module load if the global moves.
-const ActorSheetBase = foundry.appv1?.sheets?.ActorSheet ?? globalThis.ActorSheet;
+// Resolve the ActorSheet base from the live runtime instead of hard-binding a
+// global the instant this file is imported. If the base isn't resolvable at that
+// instant, `class extends <undefined>` throws and aborts the ENTIRE module — which
+// is exactly what strips the actor-directory buttons AND every sheet at once with
+// no popup. Resolving it here (global first) keeps the module loading.
+const ActorSheetBase = globalThis.ActorSheet ?? foundry?.appv1?.sheets?.ActorSheet;
 
 export class VesselSheet extends ActorSheetBase {
 

@@ -214,7 +214,11 @@ function applyTargetToCharacter(actor, type, target) {
 /*  The Application class                                             */
 /* ------------------------------------------------------------------ */
 
-export class SquadPoolsApp extends Application {
+// Resolve the Application base from the live runtime instead of binding the
+// global at import time, so a missing global can't abort module load. Global first.
+const ApplicationBase = globalThis.Application ?? foundry?.appv1?.api?.Application;
+
+export class SquadPoolsApp extends ApplicationBase {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       id: "lancer-far-field-squad-pools",

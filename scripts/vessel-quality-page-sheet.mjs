@@ -7,7 +7,10 @@
 
 import { MODULE_ID } from "./main.mjs";
 
-export class VesselQualityPageSheet extends JournalPageSheet {
+// Resolve the JournalPageSheet base from the live runtime (see hazard-entity-page-sheet.mjs).
+const JournalPageSheetBase = globalThis.JournalPageSheet ?? foundry?.appv1?.sheets?.JournalPageSheet;
+
+export class VesselQualityPageSheet extends JournalPageSheetBase {
 
   /** @override */
   static get defaultOptions() {

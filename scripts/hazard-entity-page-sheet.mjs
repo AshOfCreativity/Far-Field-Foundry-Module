@@ -8,7 +8,12 @@
 import { MODULE_ID } from "./main.mjs";
 import { ENTITY_CATEGORIES, RATING_LEVELS } from "./hazard-entity-data.mjs";
 
-export class HazardEntityPageSheet extends JournalPageSheet {
+// Resolve the JournalPageSheet base from the live runtime instead of binding the
+// global at import time — a missing base here would `class extends <undefined>`
+// and abort the whole module. Global first.
+const JournalPageSheetBase = globalThis.JournalPageSheet ?? foundry?.appv1?.sheets?.JournalPageSheet;
+
+export class HazardEntityPageSheet extends JournalPageSheetBase {
 
   /** @override */
   static get defaultOptions() {

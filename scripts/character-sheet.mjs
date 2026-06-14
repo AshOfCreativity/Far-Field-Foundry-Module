@@ -18,8 +18,8 @@ import {
   getDefaultSkills
 } from "./character-data.mjs";
 
-// Resolve the v1 ActorSheet base in a version-safe way (see vessel-sheet.mjs).
-const ActorSheetBase = foundry.appv1?.sheets?.ActorSheet ?? globalThis.ActorSheet;
+// Resolve the ActorSheet base from the live runtime (see vessel-sheet.mjs).
+const ActorSheetBase = globalThis.ActorSheet ?? foundry?.appv1?.sheets?.ActorSheet;
 
 export class CharacterSheet extends ActorSheetBase {
 
