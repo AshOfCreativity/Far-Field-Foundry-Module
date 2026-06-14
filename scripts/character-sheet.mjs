@@ -18,7 +18,10 @@ import {
   getDefaultSkills
 } from "./character-data.mjs";
 
-export class CharacterSheet extends ActorSheet {
+// Resolve the v1 ActorSheet base in a version-safe way (see vessel-sheet.mjs).
+const ActorSheetBase = foundry.appv1?.sheets?.ActorSheet ?? globalThis.ActorSheet;
+
+export class CharacterSheet extends ActorSheetBase {
 
   /** @override */
   static get defaultOptions() {

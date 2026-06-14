@@ -76,24 +76,51 @@ export function getDefaultCharacterData() {
 }
 
 /**
+ * Register the Far Field actor sheets for pilot actors.
+ *
+ * This is idempotent and called BOTH in `init` and again in `ready`. The LANCER
+ * system rebuilds its own sheet registration during startup; depending on hook
+ * ordering that can drop a module's pilot-sheet entries from
+ * CONFIG.Actor.sheetClasses, which makes the sheets silently vanish from the
+ * Sheet Configuration dropdown (the actor then falls back to the default sheet
+ * with no error). Re-asserting after the system is fully ready guarantees our
+ * entries are present regardless of load order.
+ *
+ * @returns {boolean} true if both sheets registered without throwing
+ */
+export function registerFarFieldSheets() {
+  try {
+    Actors.registerSheet(MODULE_ID, VesselSheet, {
+      types: ["pilot"],
+      makeDefault: false,
+      label: "Ranger Vessel Sheet"
+    });
+
+    Actors.registerSheet(MODULE_ID, CharacterSheet, {
+      types: ["pilot"],
+      makeDefault: false,
+      label: "Far Field Character Sheet"
+    });
+
+    const registered = Object.keys(CONFIG.Actor?.sheetClasses?.pilot ?? {})
+      .filter(k => k.startsWith(MODULE_ID));
+    console.log(`${MODULE_ID} | Registered pilot sheets:`, registered);
+    return true;
+  } catch (err) {
+    console.error(`${MODULE_ID} | Failed to register Far Field sheets:`, err);
+    ui.notifications?.error("Far Field: failed to register vessel/character sheets — see console (F12).");
+    return false;
+  }
+}
+
+/**
  * Hook: Initialize module
  */
 Hooks.once("init", () => {
   console.log(`${MODULE_ID} | Initializing LANCER Far Field Sheets`);
 
-  // Register the vessel sheet for pilot actors
-  Actors.registerSheet(MODULE_ID, VesselSheet, {
-    types: ["pilot"],
-    makeDefault: false,
-    label: "Ranger Vessel Sheet"
-  });
-
-  // Register the character sheet for pilot actors
-  Actors.registerSheet(MODULE_ID, CharacterSheet, {
-    types: ["pilot"],
-    makeDefault: false,
-    label: "Far Field Character Sheet"
-  });
+  // Register the vessel and character sheets for pilot actors
+  registerFarFieldSheets();
 
   // Register hazard entity journal page type
   Object.assign(CONFIG.JournalEntryPage.dataModels, {
@@ -229,6 +256,35 @@ function registerHandlebarsHelpers() {
  */
 Hooks.once("ready", async () => {
   console.log(`${MODULE_ID} | LANCER Far Field Sheets ready`);
+
+  // Re-assert sheet registration AFTER the LANCER system has finished its own
+  // startup. If the system's sheet setup dropped our entries during init, this
+  // puts them back so the sheets reappear in the Sheet Configuration dropdown.
+  registerFarFieldSheets();
+
+  // Self-heal: a system migration (e.g. the Comp/Con v3 update) can rewrite
+  // pilot actors and wipe their `core.sheetClass` preference, which makes our
+  // flagged vessels/characters silently open the default sheet. Re-point any of
+  // OUR flagged actors back at the correct sheet. GM-only and guarded so it can
+  // never throw during startup.
+  if (game.user?.isGM) {
+    for (const actor of game.actors) {
+      try {
+        const desired = isVessel(actor)
+          ? `${MODULE_ID}.VesselSheet`
+          : isCharacter(actor)
+            ? `${MODULE_ID}.CharacterSheet`
+            : null;
+        if (!desired) continue;
+        if (actor.getFlag("core", "sheetClass") !== desired) {
+          await actor.setFlag("core", "sheetClass", desired);
+          console.log(`${MODULE_ID} | Restored Far Field sheet on actor "${actor.name}"`);
+        }
+      } catch (err) {
+        console.warn(`${MODULE_ID} | Could not restore sheet for "${actor?.name}":`, err);
+      }
+    }
+  }
 
   // Make functions available globally for macros
   const mod = game.modules.get(MODULE_ID);

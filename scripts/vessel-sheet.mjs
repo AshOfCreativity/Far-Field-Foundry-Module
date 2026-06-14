@@ -9,7 +9,13 @@
 import { MODULE_ID, FLAGS, getDefaultVesselData, getAvailableVesselQualities } from "./main.mjs";
 import { postFeatureToChat } from "./chat.mjs";
 
-export class VesselSheet extends ActorSheet {
+// Resolve the v1 ActorSheet base in a version-safe way. On Foundry v13 the
+// global is deprecated in favour of foundry.appv1.sheets.ActorSheet; on v12 the
+// namespace doesn't exist yet so we fall back to the global. This also prevents
+// `class extends undefined` from silently killing module load if the global moves.
+const ActorSheetBase = foundry.appv1?.sheets?.ActorSheet ?? globalThis.ActorSheet;
+
+export class VesselSheet extends ActorSheetBase {
 
   /** @override */
   static get defaultOptions() {
