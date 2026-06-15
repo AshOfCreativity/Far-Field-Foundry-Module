@@ -215,12 +215,8 @@ function applyTargetToCharacter(actor, type, target) {
 /*  The Application class                                             */
 /* ------------------------------------------------------------------ */
 
-// Extend a placeholder at import time; the real Application base is bound during
-// `init` (see reparentFarFieldSheetBases() in main.mjs). Referencing the base at
-// import time can throw "class extends undefined" and abort the module.
-class _FarFieldAppBase {}
-
-export class SquadPoolsApp extends _FarFieldAppBase {
+// Application is a Foundry global available at import time.
+export class SquadPoolsApp extends Application {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       id: "lancer-far-field-squad-pools",

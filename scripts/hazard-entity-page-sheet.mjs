@@ -8,12 +8,8 @@
 import { MODULE_ID } from "./constants.mjs";
 import { ENTITY_CATEGORIES, RATING_LEVELS } from "./hazard-entity-data.mjs";
 
-// Extend a placeholder at import time; the real JournalPageSheet base is bound
-// during `init` (see reparentFarFieldSheetBases() in main.mjs). Referencing the
-// base at import time can throw "class extends undefined" and abort the module.
-class _FarFieldJournalPageBase {}
-
-export class HazardEntityPageSheet extends _FarFieldJournalPageBase {
+// JournalPageSheet is a Foundry global available at import time.
+export class HazardEntityPageSheet extends JournalPageSheet {
 
   /** @override */
   static get defaultOptions() {

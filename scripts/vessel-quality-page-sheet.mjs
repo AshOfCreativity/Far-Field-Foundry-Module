@@ -7,11 +7,8 @@
 
 import { MODULE_ID } from "./constants.mjs";
 
-// Extend a placeholder at import time; the real JournalPageSheet base is bound
-// during `init` (see reparentFarFieldSheetBases() in main.mjs).
-class _FarFieldJournalPageBase {}
-
-export class VesselQualityPageSheet extends _FarFieldJournalPageBase {
+// JournalPageSheet is a Foundry global available at import time.
+export class VesselQualityPageSheet extends JournalPageSheet {
 
   /** @override */
   static get defaultOptions() {

@@ -10,15 +10,10 @@ import { MODULE_ID, FLAGS } from "./constants.mjs";
 import { getDefaultVesselData, getAvailableVesselQualities } from "./main.mjs";
 import { postFeatureToChat } from "./chat.mjs";
 
-// The core sheet base classes are not guaranteed to exist at the instant this
-// module is first imported. Referencing one in an `extends` clause at import time
-// is exactly what throws "Class extends value undefined is not a constructor" and
-// aborts the WHOLE module (removing the directory buttons AND every sheet at once,
-// with no popup). So we extend a trivial placeholder now and swap in the real
-// ActorSheet base during `init` — see reparentFarFieldSheetBases() in main.mjs.
-class _FarFieldSheetBase {}
-
-export class VesselSheet extends _FarFieldSheetBase {
+// ActorSheet is a Foundry global that is available before module esmodules are
+// evaluated (the LANCER Clocks module extends it directly the same way), so we can
+// extend it straight at import time. No placeholder/reparent dance is needed.
+export class VesselSheet extends ActorSheet {
 
   /** @override */
   static get defaultOptions() {

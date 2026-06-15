@@ -111,67 +111,34 @@ export function registerFarFieldSheets() {
 }
 
 /**
- * Bind each sheet class to its real Foundry base class.
- *
- * Our sheet classes extend a trivial placeholder at import time because the core
- * base classes (ActorSheet / JournalPageSheet / Application) are not guaranteed to
- * exist the moment this module is first evaluated. Referencing one in an `extends`
- * clause at import time is exactly what produced "Class extends value undefined is
- * not a constructor" and aborted the whole module (taking the directory buttons and
- * every sheet down with it). By the time `init` fires, the base classes always
- * exist, so we re-point each class's prototype chain at the real base here.
- *
- * Re-parenting both the constructor (static side) and the prototype (instance side)
- * means `super.*` calls and `instanceof` resolve through the live base exactly as if
- * we had written `extends ActorSheet` directly. This runs before any sheet is ever
- * instantiated, so the placeholder is never actually used.
- */
-function reparentFarFieldSheetBases() {
-  const reparent = (sub, base) => {
-    if (!sub || !base) return false;
-    Object.setPrototypeOf(sub, base);                      // static side (e.g. super.defaultOptions)
-    Object.setPrototypeOf(sub.prototype, base.prototype);  // instance side (super.getData, instanceof)
-    return true;
-  };
-
-  const actorBase = globalThis.ActorSheet ?? foundry?.appv1?.sheets?.ActorSheet;
-  const journalBase = globalThis.JournalPageSheet ?? foundry?.appv1?.sheets?.JournalPageSheet;
-  const appBase = globalThis.Application ?? foundry?.appv1?.api?.Application;
-
-  const ok =
-    reparent(VesselSheet, actorBase) &
-    reparent(CharacterSheet, actorBase) &
-    reparent(HazardEntityPageSheet, journalBase) &
-    reparent(VesselQualityPageSheet, journalBase) &
-    reparent(SquadPoolsApp, appBase);
-
-  if (!ok) {
-    console.error(`${MODULE_ID} | Could not resolve base sheet classes`, { actorBase, journalBase, appBase });
-    ui.notifications?.error("Far Field: could not bind sheet base classes — see console (F12).");
-  } else {
-    console.log(`${MODULE_ID} | Bound sheet classes to their Foundry base classes`);
-  }
-  return Boolean(ok);
-}
-
-/**
  * Hook: Initialize module
+ *
+ * Ordering matters here. The actor sheets are the CRITICAL feature, so they are
+ * registered first and on their own. Every other Far Field feature below is OPTIONAL
+ * and wrapped in its own try/catch, so a failure in any one of them (journal pages,
+ * squad pools, handlebars, …) degrades that feature gracefully without ever
+ * preventing the vessel/character sheets from appearing in the Sheet Config dropdown.
  */
 Hooks.once("init", () => {
   console.log(`${MODULE_ID} | Initializing LANCER Far Field Sheets`);
 
-  // Bind our sheet classes to the real Foundry base classes, now that they exist.
-  reparentFarFieldSheetBases();
-
-  // Register the vessel and character sheets for pilot actors
+  // --- CRITICAL: register the vessel + character sheets for pilot actors. ---
+  // registerFarFieldSheets() has its own try/catch; nothing below can stop it.
   registerFarFieldSheets();
 
-  // Register the Far Field journal page types (hazard entity + vessel quality) and
-  // their sheets. DocumentSheetConfig moved under foundry.applications.apps in
-  // Foundry v13; resolve it defensively (with the v12 global as fallback) and guard
-  // the whole block so a failure here can never abort the rest of init — the actor
-  // sheets above are already registered, and the Handlebars helpers below must still
-  // run for those sheets to render.
+  // Handlebars helpers are needed before any sheet renders. Guarded so a single bad
+  // helper can't abort the remaining optional features.
+  try {
+    registerHandlebarsHelpers();
+  } catch (err) {
+    console.error(`${MODULE_ID} | Failed to register Handlebars helpers:`, err);
+  }
+
+  // --- OPTIONAL features below. Each block is independently guarded. ---
+
+  // Far Field journal page types (hazard entity + vessel quality) and their sheets.
+  // DocumentSheetConfig moved under foundry.applications.apps in Foundry v13; resolve
+  // it defensively with the v12 global as fallback.
   try {
     const DSC = foundry.applications?.apps?.DocumentSheetConfig
       ?? globalThis.DocumentSheetConfig;
@@ -196,19 +163,25 @@ Hooks.once("init", () => {
     console.error(`${MODULE_ID} | Failed to register journal page types/sheets:`, err);
   }
 
-  // Store data in module config for easy access
-  game.modules.get(MODULE_ID).vesselQualities = VESSEL_QUALITIES;
-  game.modules.get(MODULE_ID).farFieldSkills = FAR_FIELD_SKILLS;
-  game.modules.get(MODULE_ID).farFieldEdges = FAR_FIELD_EDGES;
-  game.modules.get(MODULE_ID).entityCategories = ENTITY_CATEGORIES;
+  // Expose Far Field data on the module object for macros/other consumers.
+  try {
+    const mod = game.modules.get(MODULE_ID);
+    mod.vesselQualities = VESSEL_QUALITIES;
+    mod.farFieldSkills = FAR_FIELD_SKILLS;
+    mod.farFieldEdges = FAR_FIELD_EDGES;
+    mod.entityCategories = ENTITY_CATEGORIES;
+  } catch (err) {
+    console.error(`${MODULE_ID} | Failed to expose module data:`, err);
+  }
 
-  // Register Handlebars helpers
-  registerHandlebarsHelpers();
+  // World-scope setting for squad pools.
+  try {
+    registerSquadPoolSettings();
+  } catch (err) {
+    console.error(`${MODULE_ID} | Failed to register squad pool settings:`, err);
+  }
 
-  // Register the world-scope setting for squad pools.
-  registerSquadPoolSettings();
-
-  console.log(`${MODULE_ID} | Sheets and journal page types registered`);
+  console.log(`${MODULE_ID} | Init complete`);
 });
 
 /**
