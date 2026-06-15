@@ -5,7 +5,7 @@
  * and chat posting functionality.
  */
 
-import { MODULE_ID } from "./main.mjs";
+import { MODULE_ID } from "./constants.mjs";
 import { ENTITY_CATEGORIES, RATING_LEVELS } from "./hazard-entity-data.mjs";
 
 // Extend a placeholder at import time; the real JournalPageSheet base is bound

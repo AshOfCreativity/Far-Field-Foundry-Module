@@ -6,6 +6,7 @@
  * Using pilot actors enables LANCER's native reserves system for tracking limited-use resources.
  */
 
+import { MODULE_ID, FLAGS } from "./constants.mjs";
 import { VesselSheet } from "./vessel-sheet.mjs";
 import { CharacterSheet } from "./character-sheet.mjs";
 import { VESSEL_QUALITIES } from "./vessel-qualities.mjs";
@@ -23,16 +24,11 @@ import {
   SquadPoolsApp
 } from "./squad-pools-app.mjs";
 
-// Module ID
-export const MODULE_ID = "Far-Field-Foundry-Module-main";
-
-// Flag keys
-export const FLAGS = {
-  isVessel: "isVessel",
-  vessel: "vessel",
-  isCharacter: "isCharacter",
-  character: "character"
-};
+// MODULE_ID and FLAGS are defined in constants.mjs (a dependency-free module) to
+// avoid the circular-import temporal-dead-zone crash described there. Re-exported
+// here so existing `import { MODULE_ID, FLAGS } from "./main.mjs"` call sites and
+// any external macros keep working unchanged.
+export { MODULE_ID, FLAGS };
 
 /**
  * Default vessel data structure
@@ -170,29 +166,35 @@ Hooks.once("init", () => {
   // Register the vessel and character sheets for pilot actors
   registerFarFieldSheets();
 
-  // Register hazard entity journal page type
-  Object.assign(CONFIG.JournalEntryPage.dataModels, {
-    [`${MODULE_ID}.hazardEntity`]: HazardEntityPageModel
-  });
+  // Register the Far Field journal page types (hazard entity + vessel quality) and
+  // their sheets. DocumentSheetConfig moved under foundry.applications.apps in
+  // Foundry v13; resolve it defensively (with the v12 global as fallback) and guard
+  // the whole block so a failure here can never abort the rest of init — the actor
+  // sheets above are already registered, and the Handlebars helpers below must still
+  // run for those sheets to render.
+  try {
+    const DSC = foundry.applications?.apps?.DocumentSheetConfig
+      ?? globalThis.DocumentSheetConfig;
 
-  // Register hazard entity page sheet
-  DocumentSheetConfig.registerSheet(JournalEntryPage, MODULE_ID, HazardEntityPageSheet, {
-    types: [`${MODULE_ID}.hazardEntity`],
-    makeDefault: true,
-    label: "Hazard Entity Page"
-  });
+    Object.assign(CONFIG.JournalEntryPage.dataModels, {
+      [`${MODULE_ID}.hazardEntity`]: HazardEntityPageModel,
+      [`${MODULE_ID}.vesselQuality`]: VesselQualityPageModel
+    });
 
-  // Register vessel quality journal page type
-  Object.assign(CONFIG.JournalEntryPage.dataModels, {
-    [`${MODULE_ID}.vesselQuality`]: VesselQualityPageModel
-  });
+    DSC.registerSheet(JournalEntryPage, MODULE_ID, HazardEntityPageSheet, {
+      types: [`${MODULE_ID}.hazardEntity`],
+      makeDefault: true,
+      label: "Hazard Entity Page"
+    });
 
-  // Register vessel quality page sheet
-  DocumentSheetConfig.registerSheet(JournalEntryPage, MODULE_ID, VesselQualityPageSheet, {
-    types: [`${MODULE_ID}.vesselQuality`],
-    makeDefault: true,
-    label: "Vessel Quality Page"
-  });
+    DSC.registerSheet(JournalEntryPage, MODULE_ID, VesselQualityPageSheet, {
+      types: [`${MODULE_ID}.vesselQuality`],
+      makeDefault: true,
+      label: "Vessel Quality Page"
+    });
+  } catch (err) {
+    console.error(`${MODULE_ID} | Failed to register journal page types/sheets:`, err);
+  }
 
   // Store data in module config for easy access
   game.modules.get(MODULE_ID).vesselQualities = VESSEL_QUALITIES;

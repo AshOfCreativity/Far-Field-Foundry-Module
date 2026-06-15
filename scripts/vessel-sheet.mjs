@@ -6,7 +6,8 @@
  * Reserves can be dragged onto the Cargo tab and marked as Far Field gear for track/burn mechanics.
  */
 
-import { MODULE_ID, FLAGS, getDefaultVesselData, getAvailableVesselQualities } from "./main.mjs";
+import { MODULE_ID, FLAGS } from "./constants.mjs";
+import { getDefaultVesselData, getAvailableVesselQualities } from "./main.mjs";
 import { postFeatureToChat } from "./chat.mjs";
 
 // The core sheet base classes are not guaranteed to exist at the instant this

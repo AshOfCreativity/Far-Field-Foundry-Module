@@ -6,7 +6,7 @@
  * pre-resolved trait/tag names for portability between worlds.
  */
 
-import { MODULE_ID } from "./main.mjs";
+import { MODULE_ID } from "./constants.mjs";
 
 /**
  * Entity categories matching the Vue app's data model

@@ -5,7 +5,7 @@
  * and chat posting functionality.
  */
 
-import { MODULE_ID } from "./main.mjs";
+import { MODULE_ID } from "./constants.mjs";
 
 // Extend a placeholder at import time; the real JournalPageSheet base is bound
 // during `init` (see reparentFarFieldSheetBases() in main.mjs).

@@ -9,7 +9,8 @@
  * own character sheet (which mutates their own actor).
  */
 
-import { MODULE_ID, FLAGS, isCharacter, getCharacterData, updateCharacterData } from "./main.mjs";
+import { MODULE_ID, FLAGS } from "./constants.mjs";
+import { isCharacter, getCharacterData, updateCharacterData } from "./main.mjs";
 import {
   PROGRESSION_OPTIONS,
   FAR_FIELD_SKILLS,

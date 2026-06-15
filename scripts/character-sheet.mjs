@@ -3,7 +3,8 @@
  * Character sheet for tracking Far Field rangers with edges, backgrounds, skills, aspects, and progression
  */
 
-import { MODULE_ID, FLAGS, getDefaultCharacterData, importCharacterData, isVessel, getVesselData } from "./main.mjs";
+import { MODULE_ID, FLAGS } from "./constants.mjs";
+import { getDefaultCharacterData, importCharacterData, isVessel, getVesselData } from "./main.mjs";
 import { postFeatureToChat } from "./chat.mjs";
 import {
   FAR_FIELD_SKILLS,
